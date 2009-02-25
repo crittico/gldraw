@@ -1,16 +1,40 @@
+#ifndef FIGURES_H
+#define FIGURES_H
+
+#include <GL/glut.h>
+
 using namespace std;
 
-class Figure {
-public:
-  virtual void draw();
+class Point { 
+ public:
+  Point(int, int);
+  int* getPoints();
+ private:
+  int x;
+  int y;
+};
+
+class Figure {  //abstract class
+ public:
+  Figure() {};
+  virtual ~Figure() {};
+  void setColor(GLfloat*);
+  GLfloat *getColor();
+  virtual void draw() = 0;
+ private:
+  GLfloat *color;
 };
 
 class Line : public Figure {
-public:
-  Line();
-  void setFirst(int, int);
-  void setSecond(int, int);
+ public:
+  Line(Point*, Point*, GLfloat*);
+  virtual ~Line() {};
+  void setFirst(Point*);
+  void setSecond(Point*);
   virtual void draw();
-private:
-  int x1, y1, x2, y2;
-}
+ private:
+  Point *pt1;
+  Point *pt2;
+};
+
+#endif
