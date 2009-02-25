@@ -85,7 +85,7 @@ void displayWin2() {
 
   for (int i = 0; i < (int)figureSet.size(); i++){
 	 //	 GLfloat* c = figureSet[i]->getColor();
-	 //	 glColor3f(c[0], c[1], c[2]);
+	 // glColor3f(c[0], c[1], c[2]);
 	 figureSet[i]->draw();
   }
 
@@ -96,7 +96,7 @@ void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
 	 Point *p1 = new Point(x, H2-y);
 	 Point *p2 = new Point(x+20, H2-y);
-	 Figure *f = new Line(p1, p2, clr);
+	 Figure *f = new Line(p1, p2, clr[0], clr[1], clr[2]);
 	 figureSet.push_back(f);
   }
 

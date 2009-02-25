@@ -18,16 +18,16 @@ class Figure {  //abstract class
  public:
   Figure() {};
   virtual ~Figure() {};
-  void setColor(GLfloat*);
+  void setColor(GLfloat, GLfloat, GLfloat);
   GLfloat *getColor();
   virtual void draw() = 0;
  private:
-  GLfloat *color;
+  GLfloat color[3];
 };
 
 class Line : public Figure {
  public:
-  Line(Point*, Point*, GLfloat*);
+  Line(Point*, Point*, GLfloat, GLfloat, GLfloat);
   virtual ~Line() {};
   void setFirst(Point*);
   void setSecond(Point*);
