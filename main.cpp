@@ -1,14 +1,28 @@
 #include <iostream>
+#include <vector>
 #include <GL/glut.h>
 #include "figures.h"
 
 using namespace std;
 
+void setColor(GLfloat, GLfloat, GLfloat);
+void reshapeWin1(int, int);
+void displayWin1();
+void mouseWin1(int, int, int, int);
+void reshapeWin2(int, int);
+void displayWin2();
+void mouseWin2(int, int, int, int);
+
 int window1 = 0, window2 = 0;
 int X = 0, Y = 0;
-int W1 = 200, H1 = 500;
-int W2 = 500, H2 = 500;
+int W1 = 200, H1 = 500; // width and length of the Strumenti window
+int W2 = 500, H2 = 500; // width and length of the Foglio window
 GLfloat *clr = new GLfloat[3]; // the current color
+
+// the vector (and the relative iterator) that contains all the figures created
+vector<Figure*> figureSet;
+//vector<Figure>::iterator it;
+
 
 // set the current color
 void setColor(GLfloat r, GLfloat g, GLfloat b) {
@@ -16,6 +30,7 @@ void setColor(GLfloat r, GLfloat g, GLfloat b) {
   clr[1] = g;
   clr[2] = b;
 }
+
 
 //Strumenti window
 void reshapeWin1(int neww, int newh) {
@@ -68,20 +83,22 @@ void displayWin2() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  Point *p1 = new Point(X, Y);
-  Point *p2 = new Point(X+20, Y);
-  Figure *f = new Line(p1, p2, clr);
-  f->draw();
+  for (int i = 0; i < (int)figureSet.size(); i++){
+	 figureSet[i]->draw();
+  }
 
   glutSwapBuffers();
 }
 
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 X = x;
-	 Y = H2 - y;
-	 glutPostRedisplay();
+	 Point *p1 = new Point(x, H2-y);
+	 Point *p2 = new Point(x+20, H2-y);
+	 Figure *f = new Line(p1, p2, clr);
+	 figureSet.push_back(f);
   }
+
+  glutPostRedisplay();
 }
 
 
