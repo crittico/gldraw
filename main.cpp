@@ -44,14 +44,10 @@ void displayWin1() {
 
 void mouseWin1(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 if ((H1 - y) < H1/2) {
-		//		clr[0] = 1; clr[1] = 0; clr[2] = 0;
+	 if ((H1 - y) < H1/2) 
 		setColor(1, 0, 0);
-	 }
-	 else {
+	 else 
 		setColor(0, 1, 0);
-		//		clr[0] = 0; clr[1] = 0; clr[2] = 1;
-	 }
   }
 }
 
