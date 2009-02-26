@@ -14,6 +14,7 @@ class Point {
   int y;
 };
 
+
 class Figure {  //abstract class
  public:
   Figure() {};
@@ -24,6 +25,7 @@ class Figure {  //abstract class
  private:
   GLfloat color[3];
 };
+
 
 class Line : public Figure {
  public:
@@ -36,5 +38,10 @@ class Line : public Figure {
   Point *pt1;
   Point *pt2;
 };
+
+
+/*class Quad : public Figure {
+ public:
+ Quad();*/
 
 #endif
