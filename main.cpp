@@ -19,6 +19,7 @@ int X = 0, Y = 0;
 int W1 = 200, H1 = 500; // width and length of the Strumenti window
 int W2 = 500, H2 = 500; // width and length of the Foglio window
 GLfloat *clr = new GLfloat[3]; // the current color
+int figType = 0; // the figure type selected: 0 line; 1 quad
 
 // the vector that contains all the figures created
 vector<Figure*> figureSet;
@@ -49,11 +50,25 @@ void displayWin1() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   glBegin(GL_QUADS);
-  glColor3f(1, 0, 0);
+  //line
+  glColor3f(1, 1, 1);
   glVertex2f(0, 0);
+  glVertex2f(0, 20);
+  glVertex2f(W1/2, 20);
+  glVertex2f(W1/2, 0);
+  // quad
+  glColor3f(0, 0, 0);
+  glVertex2f(W1/2, 0);
+  glVertex2f(W1/2, 20);
+  glVertex2f(W1, 20);
+  glVertex2f(W1, 0);
+  // red
+  glColor3f(1, 0, 0);
+  glVertex2f(0, 20);
   glVertex2f(0, H1/2);
   glVertex2f(W1, H1/2);
-  glVertex2f(W1, 0);
+  glVertex2f(W1, 20);
+  // green
   glColor3f(0, 1, 0);
   glVertex2f(0, H1/2);
   glVertex2f(0, H1);
@@ -66,9 +81,15 @@ void displayWin1() {
 
 void mouseWin1(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 if (y < H1/2) 
+	 if (y < 20){
+		if (x < W1/2)
+		  figType = 0;
+		else
+		  figType = 1;
+	 }
+	 else if ((y < H1/2) && (y > 20)) 
 		setColor(1, 0, 0);
-	 else 
+	 else if (y > H1/2)
 		setColor(0, 1, 0);
   }
 }
@@ -101,7 +122,11 @@ void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
 	 Point *p1 = new Point(x, y);
 	 Point *p2 = new Point(x, y);
-	 Figure *f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
+	 Figure *f;
+	 if (figType == 0)
+		f = new Line(p1, p2, clr[0], clr[1], clr[2]);
+	 else 
+		f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
 	 figureSet.push_back(f);
   }
 
@@ -109,9 +134,15 @@ void mouseWin2(int button, int state, int x, int y) {
 }
 
 void mouseMotion(int x, int y) {
-  Quad *q = (Quad*) figureSet.back();
   Point *p = new Point(x, y);
-  q->setThird(p);
+  if (figType == 0){
+	 Line *l = (Line*) figureSet.back();
+	 l->setSecond(p);
+  }
+  else {
+	 Quad *q = (Quad*) figureSet.back();
+	 q->setThird(p);
+  }
   glutPostRedisplay();
 }
 
