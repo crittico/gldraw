@@ -101,7 +101,7 @@ void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
 	 Point *p1 = new Point(x, y);
 	 Point *p2 = new Point(x, y);
-	 Figure *f = new Line(p1, p2, clr[0], clr[1], clr[2]);
+	 Figure *f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
 	 figureSet.push_back(f);
   }
 
@@ -109,9 +109,9 @@ void mouseWin2(int button, int state, int x, int y) {
 }
 
 void mouseMotion(int x, int y) {
-  Line *l = (Line*) figureSet.back();
+  Quad *q = (Quad*) figureSet.back();
   Point *p = new Point(x, y);
-  l->setSecond(p);
+  q->setThird(p);
   glutPostRedisplay();
 }
 

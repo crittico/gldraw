@@ -40,8 +40,20 @@ class Line : public Figure {
 };
 
 
-/*class Quad : public Figure {
+class Quad : public Figure {
  public:
- Quad();*/
+  Quad(Point*, Point*, GLfloat, GLfloat, GLfloat);
+  virtual ~Quad() {};
+  void setFirst(Point*);
+  void setSecond(Point*);
+  void setThird(Point*);
+  void setFourth(Point*);
+  virtual void draw();
+ private:
+  Point *pt1;
+  Point *pt2;
+  Point *pt3;
+  Point *pt4;
+};
 
 #endif
