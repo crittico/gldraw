@@ -14,6 +14,7 @@ void displayWin2();
 void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
+void selWin1(GLuint*);
 
 int window1 = 0, window2 = 0;
 int X = 0, Y = 0;
@@ -22,13 +23,14 @@ int W2 = 500, H2 = 500; // width and length of the Foglio window
 
 // define figure names
 #define LINE 1
-#define QUAD 2
-#define TRIANGLE 3
-int figType = LINE; // the figure type selected: 0 line; 1 quad
+#define TRIANGLE 2
+#define QUAD 3
+int figType = LINE; // the figure type selected: 1 line; 2 quad
 
 // define color names
-#define RED 4
-#define GREEN 5
+#define RED 6
+#define GREEN 7
+#define BLUE 8
 GLfloat *clr = new GLfloat[3]; // the current color
 
 vector<Figure*> figureSet; // the vector that contains all the figures created
@@ -44,10 +46,10 @@ void setColor(GLfloat r, GLfloat g, GLfloat b) {
 // draw a quad
 void drawQuad(int x, int y, int w, int z) {
   glBegin(GL_QUADS);
-  glVertex3f(x, y, 0);
-  glVertex3f(w, y, 0);
-  glVertex3f(w, z, 0);
-  glVertex3f(x, z, 0);
+  glVertex2f(x, y);
+  glVertex2f(w, y);
+  glVertex2f(w, z);
+  glVertex2f(x, z);
   glEnd();
 }
 
@@ -60,7 +62,7 @@ void reshapeWin1(int neww, int newh) {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, (GLdouble)W1, 0, (GLdouble)H1);
+  glOrtho(0, W1, 0, H1, 1, -1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 }
@@ -69,9 +71,9 @@ void displayWin1() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
+  int hb = H1/10; // height of the buttons
   
+
   // initialize the stack for the selection
   glInitNames();
   glPushName(0);
@@ -79,37 +81,72 @@ void displayWin1() {
   //line
   glColor3f(1, 1, 1);
   glLoadName(LINE);
-  drawQuad(0, H1, W1/2, H1-20);
-  // quad
+  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+  // triangle
   glColor3f(0, 0, 0);
+  glLoadName(TRIANGLE);
+  drawQuad(W1/2, H1, W1, H1-hb);
+
+  glPushMatrix();
+  glTranslatef(0, -hb, 0);
+
+  // quad
+  glColor3f(0.5, 0.5, 0.5);
   glLoadName(QUAD);
-  drawQuad(W1/2, H1, W1, H1-20);
+  //  drawQuad(0, H1-hb, W1/2, H1-(2*hb));
+  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+  
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -3*(hb), 0);
+  
+  // current color
+  glColor3f(clr[0], clr[1], clr[2]);
+  //  drawQuad(0, H1-(3*hb), W1, H1-(4*hb));
+  drawQuad(0, H1, W1, H1-hb);
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -4*(hb), 0);
+  
   // red
   glColor3f(1, 0, 0);
   glLoadName(RED);
-  drawQuad(0, H1-20, W1, H1/2);
+  //  drawQuad(0, H1-(4*hb), W1/3, H1-(5*hb));
+  drawQuad(0, H1, (GLfloat)W1/3.0, H1-hb);
   // green
   glColor3f(0, 1, 0);
   glLoadName(GREEN);
-  drawQuad(0, H1/2, W1, 0);
-
+  //  drawQuad(W1/3, H1-(4*hb), W1*(2.0/3.0), H1-(5*hb));
+  drawQuad((GLfloat)W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  // blue
+  glColor3f(0, 0, 1);
+  glLoadName(BLUE);
+  //  drawQuad(W1*(2.0/3.0), H1-(4*hb), W1, H1-(5*hb));
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+  
   glPopMatrix();
+
   glutSwapBuffers();
 }
 
 // process selection
-void processSelection(GLuint *pselectBuff){
+void selWin1(GLuint *pselectBuff){
   //  int count = pselectBuff[0];
   int id = pselectBuff[3];
   
   switch(id){
   case LINE:
 	 cout << "Line\n";
-	 figType = 0;
+	 figType = LINE;
 	 break;
   case QUAD:
 	 cout << "Quad\n";
-	 figType = 1;
+	 figType = QUAD;
+	 break;
+  case TRIANGLE:
+	 cout << "Triangle\n";
+	 figType = TRIANGLE;
 	 break;
   case RED:
 	 cout << "Red\n";
@@ -119,6 +156,9 @@ void processSelection(GLuint *pselectBuff){
 	 cout << "Green\n";
 	 setColor(0, 1, 0);
 	 break;
+  case BLUE:
+	 cout << "Blue\n";
+	 setColor(0, 0, 1);
   }
 }
 
@@ -130,65 +170,53 @@ void mouseWin1(int button, int state, int x, int y) {
 	 static GLuint selectBuff[BUFFER_LENGTH];
 	 	// Hit counter and viewport storage
 	 GLint hits, viewport[4];
+	 
+	 // Setup selection buffer
+	 glSelectBuffer(BUFFER_LENGTH, selectBuff);
+	 
+	 // Get the viewport
+	 glGetIntegerv(GL_VIEWPORT, viewport);
+	 
+	 // Switch to projection and save the matrix
+	 glMatrixMode(GL_PROJECTION);
+	 glPushMatrix();
+	 
+	 // Change render mode
+	 glRenderMode(GL_SELECT);
 
-	// Setup selection buffer
-	glSelectBuffer(BUFFER_LENGTH, selectBuff);
-	
-	// Get the viewport
-	glGetIntegerv(GL_VIEWPORT, viewport);
-
-	// Switch to projection and save the matrix
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-
-	// Change render mode
-	glRenderMode(GL_SELECT);
-
-	// Establish new clipping volume to be unit cube around
-	// mouse cursor point (xPos, yPos) and extending two pixels
-	// in the vertical and horizontal direction
-	glLoadIdentity();
-	gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
-	//gluPickMatrix(x, y, 2, 2, viewport);
-
-	// Apply perspective matrix 
-	//gluPerspective(60.0f, W1/H1, 1.0, 425.0);
-	gluOrtho2D(0, (GLdouble)W1, 0, (GLdouble)H1);
-	glMatrixMode(GL_MODELVIEW);
-
-	// Draw the scene
-	displayWin1();
-
-	// Collect the hits
-	hits = glRenderMode(GL_RENDER);
-
-	// Restore the projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
-	// Go back to modelview for normal rendering
-	glMatrixMode(GL_MODELVIEW);
-
-	// If a single hit occurred, display the info.
-	if(hits == 1){
-	  cout << hits << "foo";
-	  cout << selectBuff[3] << endl;
-	  processSelection(selectBuff);
-	}
-
-	glutPostRedisplay();
-
-	 /*	 if (y < 20){
-		if (x < W1/2)
-		  figType = 0;
-		else
-		  figType = 1;
+	 // Establish new clipping volume to be unit cube around
+	 // mouse cursor point (xPos, yPos) and extending two pixels
+	 // in the vertical and horizontal direction
+	 glLoadIdentity();
+	 gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
+	 //gluPickMatrix(x, y, 2, 2, viewport);
+	 
+	 // Apply perspective matrix 
+	 //gluPerspective(60.0f, W1/H1, 1.0, 425.0);
+	 glOrtho(0, W1, 0, H1, 1, -1);
+	 glMatrixMode(GL_MODELVIEW);
+	 
+	 // Draw the scene
+	 displayWin1();
+	 
+	 // Collect the hits
+	 hits = glRenderMode(GL_RENDER);
+	 
+	 // Restore the projection matrix
+	 glMatrixMode(GL_PROJECTION);
+	 glPopMatrix();
+	 
+	 // Go back to modelview for normal rendering
+	 glMatrixMode(GL_MODELVIEW);
+	 
+	 // If a single hit occurred, display the info.
+	 if(hits == 1){
+		cout << hits << "foo";
+		cout << selectBuff[3] << endl;
+		selWin1(selectBuff);
 	 }
-	 else if ((y < H1/2) && (y > 20)) 
-		setColor(1, 0, 0);
-	 else if (y > H1/2)
-		setColor(0, 1, 0);
-		}*/
+	 
+	 glutPostRedisplay();
   }
 }
 
@@ -201,7 +229,7 @@ void reshapeWin2(int neww, int newh) {
   
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, (GLdouble)W2, (GLdouble)H2, 0);
+  gluOrtho2D(0, (GLdouble)W2, 0, (GLdouble)H2);
   glMatrixMode(GL_MODELVIEW);
 }
 
@@ -218,13 +246,21 @@ void displayWin2() {
 
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 Point *p1 = new Point(x, y);
-	 Point *p2 = new Point(x, y);
+	 Point *p1 = new Point(x, H2-y);
+	 Point *p2 = new Point(x, H2-y);
 	 Figure *f;
-	 if (figType == 0)
+	 
+	 switch(figType) {
+	 case LINE:
 		f = new Line(p1, p2, clr[0], clr[1], clr[2]);
-	 else 
+		break;
+	 case QUAD: 
 		f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
+		break;
+	 case TRIANGLE:
+		f = new Triangle(p1, p2, clr[0], clr[1], clr[2]);
+		break;
+	 }
 	 figureSet.push_back(f);
   }
 
@@ -232,15 +268,26 @@ void mouseWin2(int button, int state, int x, int y) {
 }
 
 void mouseMotion(int x, int y) {
-  Point *p = new Point(x, y);
-  if (figType == 0){
+  Point *p = new Point(x, H2-y);
+
+  switch(figType) {
+  case LINE: {
 	 Line *l = (Line*) figureSet.back();
 	 l->setSecond(p);
+	 break;
   }
-  else {
+  case QUAD: {
 	 Quad *q = (Quad*) figureSet.back();
 	 q->setThird(p);
+	 break;
   }
+  case TRIANGLE: {
+	 Triangle *t = (Triangle*) figureSet.back();
+	 t->setSecond(p);
+	 break;
+  }
+  }
+
   glutPostRedisplay();
 }
 

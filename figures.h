@@ -35,10 +35,20 @@ class Line : public Figure {
   void setSecond(Point*);
   virtual void draw();
  private:
-  Point *pt1;
-  Point *pt2;
+  Point *pt1, *pt2;
 };
 
+class Triangle : public Figure {
+ public:
+  Triangle(Point*, Point*, GLfloat, GLfloat, GLfloat);
+  virtual ~Triangle() {};
+  void setFirst(Point*);
+  void setSecond(Point*);
+  void setThird(Point*);
+  virtual void draw();
+ private:
+  Point *pt1, *pt2, *pt3;
+};
 
 class Quad : public Figure {
  public:
@@ -50,10 +60,7 @@ class Quad : public Figure {
   void setFourth(Point*);
   virtual void draw();
  private:
-  Point *pt1;
-  Point *pt2;
-  Point *pt3;
-  Point *pt4;
+  Point *pt1, *pt2, *pt3, *pt4;
 };
 
 #endif
