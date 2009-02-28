@@ -72,7 +72,6 @@ void displayWin1() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   int hb = H1/10; // height of the buttons
-  
 
   // initialize the stack for the selection
   glInitNames();
@@ -93,7 +92,6 @@ void displayWin1() {
   // quad
   glColor3f(0.5, 0.5, 0.5);
   glLoadName(QUAD);
-  //  drawQuad(0, H1-hb, W1/2, H1-(2*hb));
   drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
   
   glPopMatrix();
@@ -102,7 +100,6 @@ void displayWin1() {
   
   // current color
   glColor3f(clr[0], clr[1], clr[2]);
-  //  drawQuad(0, H1-(3*hb), W1, H1-(4*hb));
   drawQuad(0, H1, W1, H1-hb);
 
   glPopMatrix();
@@ -112,21 +109,33 @@ void displayWin1() {
   // red
   glColor3f(1, 0, 0);
   glLoadName(RED);
-  //  drawQuad(0, H1-(4*hb), W1/3, H1-(5*hb));
   drawQuad(0, H1, (GLfloat)W1/3.0, H1-hb);
   // green
   glColor3f(0, 1, 0);
   glLoadName(GREEN);
-  //  drawQuad(W1/3, H1-(4*hb), W1*(2.0/3.0), H1-(5*hb));
   drawQuad((GLfloat)W1/3.0, H1, W1*(2.0/3.0), H1-hb);
   // blue
   glColor3f(0, 0, 1);
   glLoadName(BLUE);
-  //  drawQuad(W1*(2.0/3.0), H1-(4*hb), W1, H1-(5*hb));
   drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
   
   glPopMatrix();
-
+  
+  // borders of the buttons
+  glColor3f(0, 0, 0);
+  glBegin(GL_LINES);
+  glVertex2f((GLfloat)W1/2, H1);
+  glVertex2f((GLfloat)W1/2, H1-(3*hb));
+  glVertex2f((GLfloat)W1/3, H1-(4*hb));
+  glVertex2f((GLfloat)W1/3, 0);
+  glVertex2f(W1*(2.0/3.0), H1-(4*hb));
+  glVertex2f(W1*(2.0/3.0), 0);
+  for (int i = hb; i < H1; i += hb){
+	 glVertex2f(0, H1-i);
+	 glVertex2f(W1, H1-i);
+  }
+  glEnd();
+  
   glutSwapBuffers();
 }
 
