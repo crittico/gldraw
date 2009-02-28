@@ -13,16 +13,25 @@ void reshapeWin2(int, int);
 void displayWin2();
 void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
+void drawQuad(int, int, int, int);
 
 int window1 = 0, window2 = 0;
 int X = 0, Y = 0;
-int W1 = 200, H1 = 500; // width and length of the Strumenti window
+int W1 = 100, H1 = 500; // width and length of the Strumenti window
 int W2 = 500, H2 = 500; // width and length of the Foglio window
-GLfloat *clr = new GLfloat[3]; // the current color
-int figType = 0; // the figure type selected: 0 line; 1 quad
 
-// the vector that contains all the figures created
-vector<Figure*> figureSet;
+// define figure names
+#define LINE 1
+#define QUAD 2
+#define TRIANGLE 3
+int figType = LINE; // the figure type selected: 0 line; 1 quad
+
+// define color names
+#define RED 4
+#define GREEN 5
+GLfloat *clr = new GLfloat[3]; // the current color
+
+vector<Figure*> figureSet; // the vector that contains all the figures created
 
 
 // set the current color
@@ -30,6 +39,16 @@ void setColor(GLfloat r, GLfloat g, GLfloat b) {
   clr[0] = r;
   clr[1] = g;
   clr[2] = b;
+}
+
+// draw a quad
+void drawQuad(int x, int y, int w, int z) {
+  glBegin(GL_QUADS);
+  glVertex3f(x, y, 0);
+  glVertex3f(w, y, 0);
+  glVertex3f(w, z, 0);
+  glVertex3f(x, z, 0);
+  glEnd();
 }
 
 
@@ -41,47 +60,125 @@ void reshapeWin1(int neww, int newh) {
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, (GLdouble)W1, (GLdouble)H1, 0);
+  gluOrtho2D(0, (GLdouble)W1, 0, (GLdouble)H1);
   glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 }
 
 void displayWin1() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  glBegin(GL_QUADS);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  
+  // initialize the stack for the selection
+  glInitNames();
+  glPushName(0);
+  
   //line
   glColor3f(1, 1, 1);
-  glVertex2f(0, 0);
-  glVertex2f(0, 20);
-  glVertex2f(W1/2, 20);
-  glVertex2f(W1/2, 0);
+  glLoadName(LINE);
+  drawQuad(0, H1, W1/2, H1-20);
   // quad
   glColor3f(0, 0, 0);
-  glVertex2f(W1/2, 0);
-  glVertex2f(W1/2, 20);
-  glVertex2f(W1, 20);
-  glVertex2f(W1, 0);
+  glLoadName(QUAD);
+  drawQuad(W1/2, H1, W1, H1-20);
   // red
   glColor3f(1, 0, 0);
-  glVertex2f(0, 20);
-  glVertex2f(0, H1/2);
-  glVertex2f(W1, H1/2);
-  glVertex2f(W1, 20);
+  glLoadName(RED);
+  drawQuad(0, H1-20, W1, H1/2);
   // green
   glColor3f(0, 1, 0);
-  glVertex2f(0, H1/2);
-  glVertex2f(0, H1);
-  glVertex2f(W1, H1);
-  glVertex2f(W1, H1/2);
-  glEnd();
+  glLoadName(GREEN);
+  drawQuad(0, H1/2, W1, 0);
 
+  glPopMatrix();
   glutSwapBuffers();
+}
+
+// process selection
+void processSelection(GLuint *pselectBuff){
+  //  int count = pselectBuff[0];
+  int id = pselectBuff[3];
+  
+  switch(id){
+  case LINE:
+	 cout << "Line\n";
+	 figType = 0;
+	 break;
+  case QUAD:
+	 cout << "Quad\n";
+	 figType = 1;
+	 break;
+  case RED:
+	 cout << "Red\n";
+	 setColor(1, 0, 0);
+	 break;
+  case GREEN:
+	 cout << "Green\n";
+	 setColor(0, 1, 0);
+	 break;
+  }
 }
 
 void mouseWin1(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 if (y < 20){
+
+	 #define BUFFER_LENGTH 64
+	 // Space for selection buffer
+	 static GLuint selectBuff[BUFFER_LENGTH];
+	 	// Hit counter and viewport storage
+	 GLint hits, viewport[4];
+
+	// Setup selection buffer
+	glSelectBuffer(BUFFER_LENGTH, selectBuff);
+	
+	// Get the viewport
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
+	// Switch to projection and save the matrix
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+
+	// Change render mode
+	glRenderMode(GL_SELECT);
+
+	// Establish new clipping volume to be unit cube around
+	// mouse cursor point (xPos, yPos) and extending two pixels
+	// in the vertical and horizontal direction
+	glLoadIdentity();
+	gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
+	//gluPickMatrix(x, y, 2, 2, viewport);
+
+	// Apply perspective matrix 
+	//gluPerspective(60.0f, W1/H1, 1.0, 425.0);
+	gluOrtho2D(0, (GLdouble)W1, 0, (GLdouble)H1);
+	glMatrixMode(GL_MODELVIEW);
+
+	// Draw the scene
+	displayWin1();
+
+	// Collect the hits
+	hits = glRenderMode(GL_RENDER);
+
+	// Restore the projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	// Go back to modelview for normal rendering
+	glMatrixMode(GL_MODELVIEW);
+
+	// If a single hit occurred, display the info.
+	if(hits == 1){
+	  cout << hits << "foo";
+	  cout << selectBuff[3] << endl;
+	  processSelection(selectBuff);
+	}
+
+	glutPostRedisplay();
+
+	 /*	 if (y < 20){
 		if (x < W1/2)
 		  figType = 0;
 		else
@@ -91,6 +188,7 @@ void mouseWin1(int button, int state, int x, int y) {
 		setColor(1, 0, 0);
 	 else if (y > H1/2)
 		setColor(0, 1, 0);
+		}*/
   }
 }
 
@@ -157,7 +255,7 @@ int main(int argc, char* argv[]){
   glutDisplayFunc(displayWin1);
   glutMouseFunc(mouseWin1);
 		 
-  glutInitWindowPosition(200, 0);
+  glutInitWindowPosition(W1, 0);
   glutInitWindowSize(W2, H2);
   window2 = glutCreateWindow("Foglio");
   glutReshapeFunc(reshapeWin2);
