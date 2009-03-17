@@ -17,7 +17,9 @@ void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
 void drawBorder(int, int, int, int);
+void selection(int, int, int);
 void selWin1(GLuint*);
+void selWin2(GLuint*);
 void loadRAWs();
 
 int window1 = 0, window2 = 0;
@@ -80,6 +82,70 @@ void drawBorder(int x, int y, int w, int z) {
   glVertex2f(x, z);
   glVertex2f(x, y);
   glEnd();
+}
+
+#define BUFFER_LENGTH 64
+void selection(int x, int y, int win) {
+	 // Space for selection buffer
+	 static GLuint selectBuff[BUFFER_LENGTH];
+	 	// Hit counter and viewport storage
+	 GLint hits, viewport[4];
+	 
+	 // Setup selection buffer
+	 glSelectBuffer(BUFFER_LENGTH, selectBuff);
+	 
+	 // Get the viewport
+	 glGetIntegerv(GL_VIEWPORT, viewport);
+	 
+	 // Switch to projection and save the matrix
+	 glMatrixMode(GL_PROJECTION);
+	 glPushMatrix();
+	 
+	 // Change render mode
+	 glRenderMode(GL_SELECT);
+
+	 // Establish new clipping volume to be unit cube around
+	 // mouse cursor point (xPos, yPos) and extending two pixels
+	 // in the vertical and horizontal direction
+	 glLoadIdentity();
+	 gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
+	 //gluPickMatrix(x, y, 2, 2, viewport);
+	 
+	 // Apply perspective matrix 
+	 //gluPerspective(60.0f, W1/H1, 1.0, 425.0);
+	 if (win == 1)
+		glOrtho(0, W1, 0, H1, 1, -1);
+	 else if (win == 2)
+		glOrtho(0, W2, 0, H2, 1, -1);
+	 glMatrixMode(GL_MODELVIEW);
+	 
+	 // Draw the scene
+	 if (win == 1)
+		displayWin1();
+	 else if (win == 2)
+		displayWin2();
+	 
+	 // Collect the hits
+	 hits = glRenderMode(GL_RENDER);
+	 
+	 // Restore the projection matrix
+	 glMatrixMode(GL_PROJECTION);
+	 glPopMatrix();
+	 
+	 // Go back to modelview for normal rendering
+	 glMatrixMode(GL_MODELVIEW);
+	 
+	 // If a single hit occurred, display the info.
+	 if(hits > 0){
+		cout << hits << "foo";
+		cout << selectBuff[3] << endl;
+		if (win == 1)
+		  selWin1(selectBuff);
+		else if (win == 2)
+		  selWin2(selectBuff);
+	 }
+	 
+	 glutPostRedisplay();
 }
 
 GLubyte *texture[256 * 256 * 3];
@@ -227,82 +293,25 @@ void selWin1(GLuint *pselectBuff){
 	 figType = LINE;
 	 break;
   case QUAD:
-	 cout << "Quad\n";
 	 figType = QUAD;
 	 break;
   case TRIANGLE:
-	 cout << "Triangle\n";
 	 figType = TRIANGLE;
 	 break;
   case RED:
-	 cout << "Red\n";
 	 setColor(1, 0, 0);
 	 break;
   case GREEN:
-	 cout << "Green\n";
 	 setColor(0, 1, 0);
 	 break;
   case BLUE:
-	 cout << "Blue\n";
 	 setColor(0, 0, 1);
   }
 }
 
 void mouseWin1(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-
-	 #define BUFFER_LENGTH 64
-	 // Space for selection buffer
-	 static GLuint selectBuff[BUFFER_LENGTH];
-	 	// Hit counter and viewport storage
-	 GLint hits, viewport[4];
-	 
-	 // Setup selection buffer
-	 glSelectBuffer(BUFFER_LENGTH, selectBuff);
-	 
-	 // Get the viewport
-	 glGetIntegerv(GL_VIEWPORT, viewport);
-	 
-	 // Switch to projection and save the matrix
-	 glMatrixMode(GL_PROJECTION);
-	 glPushMatrix();
-	 
-	 // Change render mode
-	 glRenderMode(GL_SELECT);
-
-	 // Establish new clipping volume to be unit cube around
-	 // mouse cursor point (xPos, yPos) and extending two pixels
-	 // in the vertical and horizontal direction
-	 glLoadIdentity();
-	 gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
-	 //gluPickMatrix(x, y, 2, 2, viewport);
-	 
-	 // Apply perspective matrix 
-	 //gluPerspective(60.0f, W1/H1, 1.0, 425.0);
-	 glOrtho(0, W1, 0, H1, 1, -1);
-	 glMatrixMode(GL_MODELVIEW);
-	 
-	 // Draw the scene
-	 displayWin1();
-	 
-	 // Collect the hits
-	 hits = glRenderMode(GL_RENDER);
-	 
-	 // Restore the projection matrix
-	 glMatrixMode(GL_PROJECTION);
-	 glPopMatrix();
-	 
-	 // Go back to modelview for normal rendering
-	 glMatrixMode(GL_MODELVIEW);
-	 
-	 // If a single hit occurred, display the info.
-	 if(hits == 1){
-		cout << hits << "foo";
-		cout << selectBuff[3] << endl;
-		selWin1(selectBuff);
-	 }
-	 
-	 glutPostRedisplay();
+	 selection(x, y, 1);
   }
 }
 
@@ -315,7 +324,7 @@ void reshapeWin2(int neww, int newh) {
   
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, (GLdouble)W2, 0, (GLdouble)H2);
+  glOrtho(0, W2, 0, H2, 1, -1);
   glMatrixMode(GL_MODELVIEW);
 }
 
@@ -330,24 +339,101 @@ void displayWin2() {
   glutSwapBuffers();
 }
 
+#define FEED_BUFF_SIZE 32768
+void selWin2(GLuint *pselectBuff) {
+  	// Space for the feedback buffer
+	static GLfloat feedBackBuff[FEED_BUFF_SIZE];
+
+	// Storage for counters, etc.
+	int size,i,j,count;
+
+	// Initial minimum and maximum values
+	//	boundingRect.right = boundingRect.bottom = -999999;
+	// boundingRect.left = boundingRect.top =  999999;
+
+	// Set the feedback buffer
+	glFeedbackBuffer(FEED_BUFF_SIZE,GL_2D, feedBackBuff);
+
+	// Enter feedback mode
+	glRenderMode(GL_FEEDBACK);
+
+	// Redraw the scene
+	displayWin2();
+
+	// Leave feedback mode
+	size = glRenderMode(GL_RENDER);
+
+	// Parse the feedback buffer and get the
+	// min and max X and Y window coordinates
+	i = 0;
+	while(i < size)
+		{
+		// Search for appropriate token
+		if(feedBackBuff[i] == GL_PASS_THROUGH_TOKEN)
+			if(feedBackBuff[i+1] == (GLfloat)pselectBuff[3])
+			{
+			i+= 2;
+			// Loop until next token is reached
+			while(i < size && feedBackBuff[i] != GL_PASS_THROUGH_TOKEN)
+				{
+				// Just get the polygons
+				if(feedBackBuff[i] == GL_POLYGON_TOKEN)
+					{
+					// Get all the values for this polygon
+					count = (int)feedBackBuff[++i]; // How many vertices
+					i++;
+
+					for(j = 0; j < count; j++)	// Loop for each vertex
+						{
+						  cout << feedBackBuff[i] << " ";
+						  /*						// Min and Max X
+						if(feedBackBuff[i] > boundingRect.right)
+							boundingRect.right = int(feedBackBuff[i]);
+
+						if(feedBackBuff[i] < int(boundingRect.left))
+							boundingRect.left = int(feedBackBuff[i]);
+						i++;
+
+						// Min and Max Y
+						if(feedBackBuff[i] > boundingRect.bottom)
+							boundingRect.bottom = int(feedBackBuff[i]);
+
+						if(feedBackBuff[i] < boundingRect.top)
+							boundingRect.top = int(feedBackBuff[i]);
+							i++;*/
+						}
+					}
+				else
+					i++;	// Get next index and keep looking
+				}
+			break;
+			}
+		i++;
+		}
+}
+
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 Point *p1 = new Point(x, H2-y);
-	 Point *p2 = new Point(x, H2-y);
-	 Figure *f;
-	 
-	 switch(figType) {
-	 case LINE:
-		f = new Line(p1, p2, clr[0], clr[1], clr[2]);
-		break;
-	 case QUAD: 
-		f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
-		break;
-	 case TRIANGLE:
-		f = new Triangle(p1, p2, clr[0], clr[1], clr[2]);
-		break;
+	 if (figType == POINTER)
+		selection(x, y, 2);
+	 else {
+		Point *p1 = new Point(x, H2-y);
+		Point *p2 = new Point(x, H2-y);
+		Figure *f;
+		
+		switch(figType) {
+		case LINE:
+		  f = new Line(p1, p2, clr[0], clr[1], clr[2]);
+		  break;
+		case QUAD: 
+		  f = new Quad(p1, p2, clr[0], clr[1], clr[2]);
+		  break;
+		case TRIANGLE:
+		  f = new Triangle(p1, p2, clr[0], clr[1], clr[2]);
+		  break;
+		}
+		figureSet.push_back(f);
 	 }
-	 figureSet.push_back(f);
   }
 
   glutPostRedisplay();

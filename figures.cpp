@@ -2,6 +2,10 @@
 #include <GL/glut.h>
 #include "figures.h"
 
+#define LINE 1
+#define TRIANGLE 2
+#define QUAD 3
+
 using namespace std;
 
 // Point methods
@@ -50,6 +54,8 @@ void Line::draw() {
   int *pts1 = pt1->getPoints();
   int *pts2 = pt2->getPoints();
   //  cout << c[0] << c[1] << c[2] << endl;
+  glLoadName(LINE);
+  glPassThrough((GLfloat)LINE);
   glBegin(GL_LINES);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
@@ -78,7 +84,8 @@ void Triangle::setSecond(Point *p) {
   pt2 = p;
   int *pts1 = pt1->getPoints();
   int *pts2 = pt2->getPoints();
-  Point *p3 = new Point((pts1[0]+pts2[0])/2, pts1[1]+(pts2[0]-pts1[0]));
+  Point *p3 = new Point(pts1[0], pts2[1] + (pts2[1]-pts1[1]));
+  //  Point *p3 = new Point((pts1[0]+pts2[0])/2, pts1[1]+(pts2[0]-pts1[0]));
   setThird(p3);
 }
 
@@ -94,6 +101,8 @@ void Triangle::draw() {
   int *pts2 = pt2->getPoints();
   int *pts3 = pt3->getPoints();
   //  cout << c[0] << c[1] << c[2] << endl;
+  glLoadName(TRIANGLE);
+  glPassThrough((GLfloat)TRIANGLE);
   glBegin(GL_TRIANGLES);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
@@ -149,6 +158,8 @@ void Quad::draw() {
   int *pts3 = pt3->getPoints();
   int *pts4 = pt4->getPoints();
   //  cout << c[0] << c[1] << c[2] << endl;
+  glLoadName(QUAD);
+  glPassThrough((GLfloat)QUAD);
   glBegin(GL_QUADS);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
