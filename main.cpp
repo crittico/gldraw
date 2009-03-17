@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <stdlib.h>
+#include <stdio.h>
 #include <GL/glut.h>
 #include "figures.h"
 
@@ -15,17 +17,21 @@ void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
 void selWin1(GLuint*);
+void loadRAWs();
 
 int window1 = 0, window2 = 0;
 int X = 0, Y = 0;
 int W1 = 100, H1 = 500; // width and length of the Strumenti window
 int W2 = 500, H2 = 500; // width and length of the Foglio window
 
-// define figure names
+// define figure names (also for texture)
 #define LINE 1
 #define TRIANGLE 2
 #define QUAD 3
+#define TEX_COUNT 3  // the number of textures
 int figType = LINE; // the figure type selected: 1 line; 2 quad
+GLuint textures[TEX_COUNT];
+const char *texFiles[TEX_COUNT] =  {"images/line.raw", "images/triangle.raw", "images/quad.raw"};
 
 // define color names
 #define RED 6
@@ -46,13 +52,37 @@ void setColor(GLfloat r, GLfloat g, GLfloat b) {
 // draw a quad
 void drawQuad(int x, int y, int w, int z) {
   glBegin(GL_QUADS);
+  glTexCoord2f(0, 0);
   glVertex2f(x, y);
+  glTexCoord2f(1, 0);
   glVertex2f(w, y);
+  glTexCoord2f(1, 1);
   glVertex2f(w, z);
+  glTexCoord2f(0, 1);
   glVertex2f(x, z);
   glEnd();
 }
 
+GLubyte *texture[256 * 256 * 3];
+void loadRAWs(){
+  glGenTextures(TEX_COUNT, textures);
+  for (int i = 0; i < TEX_COUNT; i++) {
+	 FILE *fHan = fopen(texFiles[i], "rb");
+	 if(fHan == NULL) exit(1);
+	 fread(texture, 256 * 256, 3, fHan);
+	 fclose(fHan);
+	 
+	 glBindTexture(GL_TEXTURE_2D, textures[i]);
+	 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	 glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	 // glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+	 // glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+	 
+	 gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, 256, 256, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	 //*texture = NULL;
+  }
+}
 
 //Strumenti window
 void reshapeWin1(int neww, int newh) {
@@ -70,34 +100,40 @@ void reshapeWin1(int neww, int newh) {
 void displayWin1() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+  glEnable(GL_TEXTURE_2D);
+  loadRAWs();
+
   int hb = H1/10; // height of the buttons
 
   // initialize the stack for the selection
   glInitNames();
   glPushName(0);
-  
-  //line
+
   glColor3f(1, 1, 1);
+   
+  //line
   glLoadName(LINE);
+  glBindTexture(GL_TEXTURE_2D, textures[0]);
   drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+
   // triangle
-  glColor3f(0, 0, 0);
   glLoadName(TRIANGLE);
+  glBindTexture(GL_TEXTURE_2D, textures[1]);
   drawQuad(W1/2, H1, W1, H1-hb);
 
   glPushMatrix();
   glTranslatef(0, -hb, 0);
 
   // quad
-  glColor3f(0.5, 0.5, 0.5);
   glLoadName(QUAD);
+  glBindTexture(GL_TEXTURE_2D, textures[2]);
   drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
   
   glPopMatrix();
   glPushMatrix();
   glTranslatef(0, -3*(hb), 0);
   
+  glDeleteTextures(TEX_COUNT, textures);
   // current color
   glColor3f(clr[0], clr[1], clr[2]);
   drawQuad(0, H1, W1, H1-hb);
@@ -318,6 +354,8 @@ int main(int argc, char* argv[]){
   glutDisplayFunc(displayWin2);
   glutMouseFunc(mouseWin2);
   glutMotionFunc(mouseMotion);
+
+  //  loadRAWs();
 
   glutMainLoop();  
 }
