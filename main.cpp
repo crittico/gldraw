@@ -16,6 +16,7 @@ void displayWin2();
 void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
+void drawBorder(int, int, int, int);
 void selWin1(GLuint*);
 void loadRAWs();
 
@@ -25,13 +26,16 @@ int W1 = 100, H1 = 500; // width and length of the Strumenti window
 int W2 = 500, H2 = 500; // width and length of the Foglio window
 
 // define figure names (also for texture)
+#define POINTER 0
 #define LINE 1
 #define TRIANGLE 2
 #define QUAD 3
-#define TEX_COUNT 3  // the number of textures
-int figType = LINE; // the figure type selected: 1 line; 2 quad
+#define TEX_COUNT 4  // the number of textures
+int figType = POINTER; // the figure type selected: 1 line; 2 quad
+int hb = H1/10; // height of the buttons
 GLuint textures[TEX_COUNT];
-const char *texFiles[TEX_COUNT] =  {"images/line.raw", "images/triangle.raw", "images/quad.raw"};
+const char *texFiles[TEX_COUNT] = 
+{"images/pointer.raw", "images/line.raw", "images/triangle.raw", "images/quad.raw"};
 
 // define color names
 #define RED 6
@@ -60,6 +64,21 @@ void drawQuad(int x, int y, int w, int z) {
   glVertex2f(w, z);
   glTexCoord2f(0, 1);
   glVertex2f(x, z);
+  glEnd();
+}
+
+// draw the borders of the selected button
+void drawBorder(int x, int y, int w, int z) {
+  glColor3f(1, 0, 0.2);
+  glBegin(GL_LINES);
+  glVertex2f(x, y);
+  glVertex2f(w, y);
+  glVertex2f(w, y);
+  glVertex2f(w, z);
+  glVertex2f(w, z);
+  glVertex2f(x, z);
+  glVertex2f(x, z);
+  glVertex2f(x, y);
   glEnd();
 }
 
@@ -103,31 +122,34 @@ void displayWin1() {
   glEnable(GL_TEXTURE_2D);
   loadRAWs();
 
-  int hb = H1/10; // height of the buttons
-
   // initialize the stack for the selection
   glInitNames();
   glPushName(0);
 
   glColor3f(1, 1, 1);
    
-  //line
-  glLoadName(LINE);
-  glBindTexture(GL_TEXTURE_2D, textures[0]);
+  // pointer
+  glLoadName(POINTER);
+  glBindTexture(GL_TEXTURE_2D, textures[POINTER]);
   drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
 
-  // triangle
-  glLoadName(TRIANGLE);
-  glBindTexture(GL_TEXTURE_2D, textures[1]);
-  drawQuad(W1/2, H1, W1, H1-hb);
+  // line
+  glLoadName(LINE);
+  glBindTexture(GL_TEXTURE_2D, textures[LINE]);
+  drawQuad((GLfloat)W1/2.0, H1, W1, H1-hb);
 
   glPushMatrix();
   glTranslatef(0, -hb, 0);
 
+  // triangle
+  glLoadName(TRIANGLE);
+  glBindTexture(GL_TEXTURE_2D, textures[TRIANGLE]);
+  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+
   // quad
   glLoadName(QUAD);
-  glBindTexture(GL_TEXTURE_2D, textures[2]);
-  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+  glBindTexture(GL_TEXTURE_2D, textures[QUAD]);
+  drawQuad(W1/2, H1, W1, H1-hb);
   
   glPopMatrix();
   glPushMatrix();
@@ -171,6 +193,23 @@ void displayWin1() {
 	 glVertex2f(W1, H1-i);
   }
   glEnd();
+
+  // borders of the selected figure
+  switch(figType){
+  case POINTER:
+	 drawBorder(0, H1, (GLfloat)W1/2.0, H1-hb);
+	 break;
+  case LINE:
+	 drawBorder((GLfloat)W1/2.0, H1, W1, H1-hb);
+	 break;
+  case TRIANGLE:
+	 drawBorder(0, H1-hb, (GLfloat)W1/2.0, H1-2*hb);
+	 break;
+  case QUAD:
+	 drawBorder(W1/2, H1-hb, W1, H1-2*hb);
+	 break;
+  }
+
   
   glutSwapBuffers();
 }
@@ -179,10 +218,12 @@ void displayWin1() {
 void selWin1(GLuint *pselectBuff){
   //  int count = pselectBuff[0];
   int id = pselectBuff[3];
-  
+
   switch(id){
+  case POINTER:
+	 figType = POINTER;
+	 break;
   case LINE:
-	 cout << "Line\n";
 	 figType = LINE;
 	 break;
   case QUAD:
