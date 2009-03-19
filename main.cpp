@@ -445,6 +445,10 @@ void mouseWin2(int button, int state, int x, int y) {
 	 }
   }
 
+  if (state == GLUT_UP) {
+	 cpsel = false;
+  }
+
   glutPostRedisplay();
 }
 

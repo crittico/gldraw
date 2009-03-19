@@ -114,7 +114,6 @@ void Triangle::draw(int n) {
   int *pts1 = pt1->getCoords();
   int *pts2 = pt2->getCoords();
   int *pts3 = pt3->getCoords();
-  //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
   glBegin(GL_TRIANGLES);
   glVertex2f(pts1[0], pts1[1]);
@@ -184,7 +183,6 @@ void Quad::draw(int n) {
   int *pts2 = pt2->getCoords();
   int *pts3 = pt3->getCoords();
   int *pts4 = pt4->getCoords();
-  //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
   glBegin(GL_QUADS);
   glVertex2f(pts1[0], pts1[1]);
