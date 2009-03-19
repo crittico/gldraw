@@ -22,6 +22,7 @@ class Figure {  //abstract class
   void setColor(GLfloat, GLfloat, GLfloat);
   GLfloat *getColor();
   virtual void draw(int) = 0;
+  virtual Point* getPoint(int) = 0;
  private:
   GLfloat color[3];
 };
@@ -34,8 +35,7 @@ class Line : public Figure {
   void setFirst(Point*);
   void setSecond(Point*);
   virtual void draw(int);
-  Point* getPoint1();
-  Point* getPoint2();
+  Point* getPoint(int);
  private:
   Point *pt1, *pt2;
 };
@@ -48,9 +48,7 @@ class Triangle : public Figure {
   void setSecond(Point*);
   void setThird(Point*);
   void draw(int);
-  Point* getPoint1();
-  Point* getPoint2();
-  Point* getPoint3();
+  Point* getPoint(int);
  private:
   Point *pt1, *pt2, *pt3;
 };
@@ -64,10 +62,7 @@ class Quad : public Figure {
   void setThird(Point*);
   void setFourth(Point*);
   virtual void draw(int);
-  Point* getPoint1();
-  Point* getPoint2();
-  Point* getPoint3();
-  Point* getPoint4();
+  Point* getPoint(int);
  private:
   Point *pt1, *pt2, *pt3, *pt4;
 };

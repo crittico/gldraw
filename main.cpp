@@ -94,8 +94,8 @@ void drawSel() {
 
   Line *l = dynamic_cast<Line*>(f);
   if (l) {
-	 Point *p1 = l->getPoint1();
-	 Point *p2 = l->getPoint2();
+	 Point *p1 = l->getPoint(1);
+	 Point *p2 = l->getPoint(2);
 	 int *pt1 = p1->getCoords();
 	 int *pt2 = p2->getCoords();
 	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
@@ -104,9 +104,9 @@ void drawSel() {
   else {
 	 Triangle *t = dynamic_cast<Triangle*>(f);
 	 if (t) {
-		Point *p1 = t->getPoint1();
-		Point *p2 = t->getPoint2();
-		Point *p3 = t->getPoint3();
+		Point *p1 = t->getPoint(1);
+		Point *p2 = t->getPoint(2);
+		Point *p3 = t->getPoint(3);
 		int *pt1 = p1->getCoords();
 		int *pt2 = p2->getCoords();
 		int *pt3 = p3->getCoords();
@@ -116,10 +116,10 @@ void drawSel() {
 	 }
 	 else {
 		Quad *q = dynamic_cast<Quad*>(f);
-		Point *p1 = q->getPoint1();
-		Point *p2 = q->getPoint2();
-		Point *p3 = q->getPoint3();
-		Point *p4 = q->getPoint4();
+		Point *p1 = q->getPoint(1);
+		Point *p2 = q->getPoint(2);
+		Point *p3 = q->getPoint(3);
+		Point *p4 = q->getPoint(4);
 		int *pt1 = p1->getCoords();
 		int *pt2 = p2->getCoords();
 		int *pt3 = p3->getCoords();
@@ -426,6 +426,8 @@ void mouseWin2(int button, int state, int x, int y) {
 		  break;
 		}
 		figureSet.push_back(f);
+		sel = true;
+		selected = figureSet.size()-1;
 	 }
   }
 

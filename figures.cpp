@@ -62,16 +62,11 @@ void Line::draw(int n) {
   glEnd();
 }
 
-Point* Line::getPoint1() {
-  return pt1;
-}
-
-Point* Line::getPoint2() {
+Point* Line::getPoint(int n) {
+  if (n == 1)
+	 return pt1;
   return pt2;
 }
-
-
-
 
 // Triangle methods
 Triangle::Triangle(Point *p1, Point *p2, GLfloat r, GLfloat g, GLfloat b) {
@@ -120,18 +115,13 @@ void Triangle::draw(int n) {
   glEnd();
 }
 
-Point* Triangle::getPoint1() {
-  return pt1;
-}
-
-Point* Triangle::getPoint2() {
-  return pt2;
-}
-
-Point* Triangle::getPoint3() {
+Point* Triangle::getPoint(int n) {
+  if (n == 1)
+	 return pt1;
+  if (n == 2)
+	 return pt2;
   return pt3;
 }
-
 
 // Quad methods
 Quad::Quad(Point *p1, Point *p3, GLfloat r, GLfloat g, GLfloat b) {
@@ -190,18 +180,12 @@ void Quad::draw(int n) {
   glEnd();
 }
 
-Point* Quad::getPoint1() {
-  return pt1;
-}
-
-Point* Quad::getPoint2() {
-  return pt2;
-}
-
-Point* Quad::getPoint3() {
-  return pt3;
-}
-
-Point* Quad::getPoint4() {
+Point* Quad::getPoint(int n) {
+  if (n == 1)
+	 return pt1;
+  if (n == 2)
+	 return pt2;
+  if (n == 3)
+	 return pt3;
   return pt4;
 }
