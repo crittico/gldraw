@@ -8,7 +8,7 @@ using namespace std;
 class Point { 
  public:
   Point(int, int);
-  int* getPoints();
+  int* getCoords();
  private:
   int x;
   int y;
@@ -21,7 +21,7 @@ class Figure {  //abstract class
   virtual ~Figure() {};
   void setColor(GLfloat, GLfloat, GLfloat);
   GLfloat *getColor();
-  virtual void draw() = 0;
+  virtual void draw(int) = 0;
  private:
   GLfloat color[3];
 };
@@ -33,7 +33,9 @@ class Line : public Figure {
   virtual ~Line() {};
   void setFirst(Point*);
   void setSecond(Point*);
-  virtual void draw();
+  virtual void draw(int);
+  Point* getPoint1();
+  Point* getPoint2();
  private:
   Point *pt1, *pt2;
 };
@@ -45,7 +47,10 @@ class Triangle : public Figure {
   void setFirst(Point*);
   void setSecond(Point*);
   void setThird(Point*);
-  virtual void draw();
+  void draw(int);
+  Point* getPoint1();
+  Point* getPoint2();
+  Point* getPoint3();
  private:
   Point *pt1, *pt2, *pt3;
 };
@@ -58,7 +63,11 @@ class Quad : public Figure {
   void setSecond(Point*);
   void setThird(Point*);
   void setFourth(Point*);
-  virtual void draw();
+  virtual void draw(int);
+  Point* getPoint1();
+  Point* getPoint2();
+  Point* getPoint3();
+  Point* getPoint4();
  private:
   Point *pt1, *pt2, *pt3, *pt4;
 };

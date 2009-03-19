@@ -18,8 +18,10 @@ void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
 void drawBorder(int, int, int, int);
 void selection(int, int, int);
+//void selection2(int, int, int);
 void selWin1(GLuint*);
-void selWin2(GLuint*);
+void drawSel();
+//void selWin2(GLuint*);
 void loadRAWs();
 
 int window1 = 0, window2 = 0;
@@ -46,7 +48,8 @@ const char *texFiles[TEX_COUNT] =
 GLfloat *clr = new GLfloat[3]; // the current color
 
 vector<Figure*> figureSet; // the vector that contains all the figures created
-
+bool sel = false;
+int selected = 0; // current selected figure
 
 // set the current color
 void setColor(GLfloat r, GLfloat g, GLfloat b) {
@@ -82,6 +85,52 @@ void drawBorder(int x, int y, int w, int z) {
   glVertex2f(x, z);
   glVertex2f(x, y);
   glEnd();
+}
+
+// draw controls point around the figure
+void drawSel() {
+  glColor3f(0, 0, 0);
+  Figure *f = figureSet[selected];
+
+  Line *l = dynamic_cast<Line*>(f);
+  if (l) {
+	 Point *p1 = l->getPoint1();
+	 Point *p2 = l->getPoint2();
+	 int *pt1 = p1->getCoords();
+	 int *pt2 = p2->getCoords();
+	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
+  }
+  else {
+	 Triangle *t = dynamic_cast<Triangle*>(f);
+	 if (t) {
+		Point *p1 = t->getPoint1();
+		Point *p2 = t->getPoint2();
+		Point *p3 = t->getPoint3();
+		int *pt1 = p1->getCoords();
+		int *pt2 = p2->getCoords();
+		int *pt3 = p3->getCoords();
+		drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+		drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
+		drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
+	 }
+	 else {
+		Quad *q = dynamic_cast<Quad*>(f);
+		Point *p1 = q->getPoint1();
+		Point *p2 = q->getPoint2();
+		Point *p3 = q->getPoint3();
+		Point *p4 = q->getPoint4();
+		int *pt1 = p1->getCoords();
+		int *pt2 = p2->getCoords();
+		int *pt3 = p3->getCoords();
+		int *pt4 = p4->getCoords();
+		drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+		drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
+		drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
+		drawQuad(pt4[0]-3, pt4[1]-3, pt4[0]+3, pt4[1]+3);
+	 }
+  }
+
 }
 
 #define BUFFER_LENGTH 64
@@ -139,10 +188,16 @@ void selection(int x, int y, int win) {
 	 if(hits > 0){
 		cout << hits << "foo";
 		cout << selectBuff[3] << endl;
-		if (win == 1)
+		if (win == 1) {
 		  selWin1(selectBuff);
-		else if (win == 2)
-		  selWin2(selectBuff);
+		}
+		else if (win == 2){
+			 sel = true;
+			 selected = selectBuff[3];//selWin2(selectBuff);
+		}
+	 }
+	 else {
+		sel = false;
 	 }
 	 
 	 glutPostRedisplay();
@@ -326,91 +381,29 @@ void reshapeWin2(int neww, int newh) {
   glLoadIdentity();
   glOrtho(0, W2, 0, H2, 1, -1);
   glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
 }
 
 void displayWin2() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glInitNames();
+  glPushName(0);
 
   for (int i = 0; i < (int)figureSet.size(); i++){
-	 figureSet[i]->draw();
+	 figureSet[i]->draw(i);
+  }
+  if (sel){
+	 drawSel();
   }
 
   glutSwapBuffers();
 }
 
-#define FEED_BUFF_SIZE 32768
+/*
 void selWin2(GLuint *pselectBuff) {
-  	// Space for the feedback buffer
-	static GLfloat feedBackBuff[FEED_BUFF_SIZE];
-
-	// Storage for counters, etc.
-	int size,i,j,count;
-
-	// Initial minimum and maximum values
-	//	boundingRect.right = boundingRect.bottom = -999999;
-	// boundingRect.left = boundingRect.top =  999999;
-
-	// Set the feedback buffer
-	glFeedbackBuffer(FEED_BUFF_SIZE,GL_2D, feedBackBuff);
-
-	// Enter feedback mode
-	glRenderMode(GL_FEEDBACK);
-
-	// Redraw the scene
-	displayWin2();
-
-	// Leave feedback mode
-	size = glRenderMode(GL_RENDER);
-
-	// Parse the feedback buffer and get the
-	// min and max X and Y window coordinates
-	i = 0;
-	while(i < size)
-		{
-		// Search for appropriate token
-		if(feedBackBuff[i] == GL_PASS_THROUGH_TOKEN)
-			if(feedBackBuff[i+1] == (GLfloat)pselectBuff[3])
-			{
-			i+= 2;
-			// Loop until next token is reached
-			while(i < size && feedBackBuff[i] != GL_PASS_THROUGH_TOKEN)
-				{
-				// Just get the polygons
-				if(feedBackBuff[i] == GL_POLYGON_TOKEN)
-					{
-					// Get all the values for this polygon
-					count = (int)feedBackBuff[++i]; // How many vertices
-					i++;
-
-					for(j = 0; j < count; j++)	// Loop for each vertex
-						{
-						  cout << feedBackBuff[i] << " ";
-						  /*						// Min and Max X
-						if(feedBackBuff[i] > boundingRect.right)
-							boundingRect.right = int(feedBackBuff[i]);
-
-						if(feedBackBuff[i] < int(boundingRect.left))
-							boundingRect.left = int(feedBackBuff[i]);
-						i++;
-
-						// Min and Max Y
-						if(feedBackBuff[i] > boundingRect.bottom)
-							boundingRect.bottom = int(feedBackBuff[i]);
-
-						if(feedBackBuff[i] < boundingRect.top)
-							boundingRect.top = int(feedBackBuff[i]);
-							i++;*/
-						}
-					}
-				else
-					i++;	// Get next index and keep looking
-				}
-			break;
-			}
-		i++;
-		}
-}
+  selected = pselectBuff[3];
+  }*/
 
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
