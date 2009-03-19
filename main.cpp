@@ -18,10 +18,8 @@ void mouseMotion(int, int);
 void drawQuad(int, int, int, int);
 void drawBorder(int, int, int, int);
 void selection(int, int, int);
-//void selection2(int, int, int);
 void selWin1(GLuint*);
 void drawSel();
-//void selWin2(GLuint*);
 void loadRAWs();
 
 int window1 = 0, window2 = 0;
@@ -36,7 +34,6 @@ int W2 = 500, H2 = 500; // width and length of the Foglio window
 #define QUAD 3
 #define TEX_COUNT 4  // the number of textures
 int figType = POINTER; // the figure type selected: 1 line; 2 quad
-int hb = H1/10; // height of the buttons
 GLuint textures[TEX_COUNT];
 const char *texFiles[TEX_COUNT] = 
 {"images/pointer.raw", "images/line.raw", "images/triangle.raw", "images/quad.raw"};
@@ -50,8 +47,8 @@ GLfloat *clr = new GLfloat[3]; // the current color
 vector<Figure*> figureSet; // the vector that contains all the figures created
 bool sel = false;
 int selected = 0; // current selected figure
-int cp = figureSet.size() + 1; // current selected control point
 int cpsel = false;
+int cp = figureSet.size() + 1; // current selected control point
 
 // set the current color
 void setColor(GLfloat r, GLfloat g, GLfloat b) {
@@ -60,7 +57,7 @@ void setColor(GLfloat r, GLfloat g, GLfloat b) {
   clr[2] = b;
 }
 
-// draw a quad
+// draw a quad with the top-left and the bottom-right points
 void drawQuad(int x, int y, int w, int z) {
   glBegin(GL_QUADS);
   glTexCoord2f(0, 0);
@@ -74,7 +71,7 @@ void drawQuad(int x, int y, int w, int z) {
   glEnd();
 }
 
-// draw the borders of the selected button
+// draw the borders of the selected button with the top-left and the bottom-right points
 void drawBorder(int x, int y, int w, int z) {
   glColor3f(1, 0, 0.2);
   glBegin(GL_LINES);
@@ -94,23 +91,19 @@ void drawSel() {
   glColor3f(0, 0, 0);
   int size = figureSet.size();
   Figure *f = figureSet[selected];
+  Point *p1 = f->getPoint(1);
+  Point *p2 = f->getPoint(2);
+  int *pt1 = p1->getCoords();
+  int *pt2 = p2->getCoords();
 
-  if (Line *l = dynamic_cast<Line*>(f)) {
-	 Point *p1 = l->getPoint(1);
-	 Point *p2 = l->getPoint(2);
-	 int *pt1 = p1->getCoords();
-	 int *pt2 = p2->getCoords();
+  if (dynamic_cast<Line*>(f)) {
 	 glLoadName(size+1);
 	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
 	 glLoadName(size+2);
 	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
   }
   else if (Triangle *t = dynamic_cast<Triangle*>(f)) {
-	 Point *p1 = t->getPoint(1);
-	 Point *p2 = t->getPoint(2);
 	 Point *p3 = t->getPoint(3);
-	 int *pt1 = p1->getCoords();
-	 int *pt2 = p2->getCoords();
 	 int *pt3 = p3->getCoords();
 	 glLoadName(size+1);
 	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
@@ -120,12 +113,8 @@ void drawSel() {
 	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
   }
   else if (Quad *q = dynamic_cast<Quad*>(f)) {
-	 Point *p1 = q->getPoint(1);
-	 Point *p2 = q->getPoint(2);
 	 Point *p3 = q->getPoint(3);
 	 Point *p4 = q->getPoint(4);
-	 int *pt1 = p1->getCoords();
-	 int *pt2 = p2->getCoords();
 	 int *pt3 = p3->getCoords();
 	 int *pt4 = p4->getCoords();
 	 glLoadName(size+1);
@@ -207,7 +196,7 @@ void selection(int x, int y, int win) {
 		else if (win == 2){
 			 sel = true;
 			 if (choiche < figureSet.size())
-				selected = choiche;//selWin2(selectBuff);
+				selected = choiche;
 			 else{
 				cpsel = true;
 				cp = choiche;
@@ -252,6 +241,7 @@ void reshapeWin1(int neww, int newh) {
 }
 
 void displayWin1() {
+  int hb = H1/10; // height of the buttons
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_TEXTURE_2D);
@@ -266,12 +256,12 @@ void displayWin1() {
   // pointer
   glLoadName(POINTER);
   glBindTexture(GL_TEXTURE_2D, textures[POINTER]);
-  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+  drawQuad(0, H1, W1/2.0, H1-hb);
 
   // line
   glLoadName(LINE);
   glBindTexture(GL_TEXTURE_2D, textures[LINE]);
-  drawQuad((GLfloat)W1/2.0, H1, W1, H1-hb);
+  drawQuad(W1/2.0, H1, W1, H1-hb);
 
   glPushMatrix();
   glTranslatef(0, -hb, 0);
@@ -279,7 +269,7 @@ void displayWin1() {
   // triangle
   glLoadName(TRIANGLE);
   glBindTexture(GL_TEXTURE_2D, textures[TRIANGLE]);
-  drawQuad(0, H1, (GLfloat)W1/2.0, H1-hb);
+  drawQuad(0, H1, W1/2.0, H1-hb);
 
   // quad
   glLoadName(QUAD);
@@ -302,11 +292,11 @@ void displayWin1() {
   // red
   glColor3f(1, 0, 0);
   glLoadName(RED);
-  drawQuad(0, H1, (GLfloat)W1/3.0, H1-hb);
+  drawQuad(0, H1, W1/3.0, H1-hb);
   // green
   glColor3f(0, 1, 0);
   glLoadName(GREEN);
-  drawQuad((GLfloat)W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
   // blue
   glColor3f(0, 0, 1);
   glLoadName(BLUE);
@@ -317,10 +307,10 @@ void displayWin1() {
   // borders of the buttons
   glColor3f(0, 0, 0);
   glBegin(GL_LINES);
-  glVertex2f((GLfloat)W1/2, H1);
-  glVertex2f((GLfloat)W1/2, H1-(3*hb));
-  glVertex2f((GLfloat)W1/3, H1-(4*hb));
-  glVertex2f((GLfloat)W1/3, 0);
+  glVertex2f(W1/2, H1);
+  glVertex2f(W1/2, H1-(3*hb));
+  glVertex2f(W1/3, H1-(4*hb));
+  glVertex2f(W1/3, 0);
   glVertex2f(W1*(2.0/3.0), H1-(4*hb));
   glVertex2f(W1*(2.0/3.0), 0);
   for (int i = hb; i < H1; i += hb){
@@ -332,26 +322,24 @@ void displayWin1() {
   // borders of the selected figure
   switch(figType){
   case POINTER:
-	 drawBorder(0, H1, (GLfloat)W1/2.0, H1-hb);
+	 drawBorder(0, H1, W1/2.0, H1-hb);
 	 break;
   case LINE:
-	 drawBorder((GLfloat)W1/2.0, H1, W1, H1-hb);
+	 drawBorder(W1/2.0, H1, W1, H1-hb);
 	 break;
   case TRIANGLE:
-	 drawBorder(0, H1-hb, (GLfloat)W1/2.0, H1-2*hb);
+	 drawBorder(0, H1-hb, W1/2.0, H1-2*hb);
 	 break;
   case QUAD:
 	 drawBorder(W1/2, H1-hb, W1, H1-2*hb);
 	 break;
   }
-
   
   glutSwapBuffers();
 }
 
 // process selection
 void selWin1(GLuint *pselectBuff){
-  //  int count = pselectBuff[0];
   int id = pselectBuff[3];
 
   switch(id){
@@ -369,13 +357,20 @@ void selWin1(GLuint *pselectBuff){
 	 break;
   case RED:
 	 setColor(1, 0, 0);
+	 if (sel)
+		figureSet[selected]->setColor(1, 0, 0);
 	 break;
   case GREEN:
 	 setColor(0, 1, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0, 1, 0);
 	 break;
   case BLUE:
 	 setColor(0, 0, 1);
+	 if (sel)
+		figureSet[selected]->setColor(0, 0, 1);
   }
+  glutPostWindowRedisplay(window2);
 }
 
 void mouseWin1(int button, int state, int x, int y) {
@@ -414,10 +409,6 @@ void displayWin2() {
   glutSwapBuffers();
 }
 
-/*
-void selWin2(GLuint *pselectBuff) {
-  selected = pselectBuff[3];
-  }*/
 
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
@@ -507,8 +498,6 @@ int main(int argc, char* argv[]){
   glutDisplayFunc(displayWin2);
   glutMouseFunc(mouseWin2);
   glutMotionFunc(mouseMotion);
-
-  //  loadRAWs();
 
   glutMainLoop();  
 }
