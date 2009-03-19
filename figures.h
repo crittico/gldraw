@@ -23,6 +23,7 @@ class Figure {  //abstract class
   GLfloat *getColor();
   virtual void draw(int) = 0;
   virtual Point* getPoint(int) = 0;
+  virtual void setPoint(int, Point*) = 0;
  private:
   GLfloat color[3];
 };
@@ -32,10 +33,9 @@ class Line : public Figure {
  public:
   Line(Point*, Point*, GLfloat, GLfloat, GLfloat);
   virtual ~Line() {};
-  void setFirst(Point*);
-  void setSecond(Point*);
+  virtual void setPoint(int, Point*);
   virtual void draw(int);
-  Point* getPoint(int);
+  virtual Point* getPoint(int);
  private:
   Point *pt1, *pt2;
 };
@@ -44,11 +44,10 @@ class Triangle : public Figure {
  public:
   Triangle(Point*, Point*, GLfloat, GLfloat, GLfloat);
   virtual ~Triangle() {};
-  void setFirst(Point*);
-  void setSecond(Point*);
-  void setThird(Point*);
-  void draw(int);
-  Point* getPoint(int);
+  void setTriangle(Point*);
+  virtual void setPoint(int, Point*);
+  virtual void draw(int);
+  virtual Point* getPoint(int);
  private:
   Point *pt1, *pt2, *pt3;
 };
@@ -57,12 +56,10 @@ class Quad : public Figure {
  public:
   Quad(Point*, Point*, GLfloat, GLfloat, GLfloat);
   virtual ~Quad() {};
-  void setFirst(Point*);
-  void setSecond(Point*);
-  void setThird(Point*);
-  void setFourth(Point*);
+  void setQuad(Point*);
+  virtual void setPoint(int, Point*);
   virtual void draw(int);
-  Point* getPoint(int);
+  virtual Point* getPoint(int);
  private:
   Point *pt1, *pt2, *pt3, *pt4;
 };

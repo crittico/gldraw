@@ -50,6 +50,8 @@ GLfloat *clr = new GLfloat[3]; // the current color
 vector<Figure*> figureSet; // the vector that contains all the figures created
 bool sel = false;
 int selected = 0; // current selected figure
+int cp = figureSet.size() + 1; // current selected control point
+int cpsel = false;
 
 // set the current color
 void setColor(GLfloat r, GLfloat g, GLfloat b) {
@@ -90,48 +92,53 @@ void drawBorder(int x, int y, int w, int z) {
 // draw controls point around the figure
 void drawSel() {
   glColor3f(0, 0, 0);
+  int size = figureSet.size();
   Figure *f = figureSet[selected];
 
-  Line *l = dynamic_cast<Line*>(f);
-  if (l) {
+  if (Line *l = dynamic_cast<Line*>(f)) {
 	 Point *p1 = l->getPoint(1);
 	 Point *p2 = l->getPoint(2);
 	 int *pt1 = p1->getCoords();
 	 int *pt2 = p2->getCoords();
+	 glLoadName(size+1);
 	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+	 glLoadName(size+2);
 	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
   }
-  else {
-	 Triangle *t = dynamic_cast<Triangle*>(f);
-	 if (t) {
-		Point *p1 = t->getPoint(1);
-		Point *p2 = t->getPoint(2);
-		Point *p3 = t->getPoint(3);
-		int *pt1 = p1->getCoords();
-		int *pt2 = p2->getCoords();
-		int *pt3 = p3->getCoords();
-		drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
-		drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
-		drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
-	 }
-	 else {
-		Quad *q = dynamic_cast<Quad*>(f);
-		Point *p1 = q->getPoint(1);
-		Point *p2 = q->getPoint(2);
-		Point *p3 = q->getPoint(3);
-		Point *p4 = q->getPoint(4);
-		int *pt1 = p1->getCoords();
-		int *pt2 = p2->getCoords();
-		int *pt3 = p3->getCoords();
-		int *pt4 = p4->getCoords();
-		drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
-		drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
-		drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
-		drawQuad(pt4[0]-3, pt4[1]-3, pt4[0]+3, pt4[1]+3);
-	 }
+  else if (Triangle *t = dynamic_cast<Triangle*>(f)) {
+	 Point *p1 = t->getPoint(1);
+	 Point *p2 = t->getPoint(2);
+	 Point *p3 = t->getPoint(3);
+	 int *pt1 = p1->getCoords();
+	 int *pt2 = p2->getCoords();
+	 int *pt3 = p3->getCoords();
+	 glLoadName(size+1);
+	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+	 glLoadName(size+2);
+	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
+	 glLoadName(size+3);
+	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
   }
-
+  else if (Quad *q = dynamic_cast<Quad*>(f)) {
+	 Point *p1 = q->getPoint(1);
+	 Point *p2 = q->getPoint(2);
+	 Point *p3 = q->getPoint(3);
+	 Point *p4 = q->getPoint(4);
+	 int *pt1 = p1->getCoords();
+	 int *pt2 = p2->getCoords();
+	 int *pt3 = p3->getCoords();
+	 int *pt4 = p4->getCoords();
+	 glLoadName(size+1);
+	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+	 glLoadName(size+2);
+	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
+	 glLoadName(size+3);
+	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
+	 glLoadName(size+4);
+	 drawQuad(pt4[0]-3, pt4[1]-3, pt4[0]+3, pt4[1]+3);
+  }
 }
+
 
 #define BUFFER_LENGTH 64
 void selection(int x, int y, int win) {
@@ -186,19 +193,29 @@ void selection(int x, int y, int win) {
 	 
 	 // If a single hit occurred, display the info.
 	 if(hits > 0){
-		cout << hits << "foo";
-		cout << selectBuff[3] << endl;
+		unsigned int choiche;
+
+		if (hits > 1)
+		  choiche = selectBuff[(hits*4)-1];
+		else
+		  choiche = selectBuff[3];
+
+		cpsel = false;
 		if (win == 1) {
 		  selWin1(selectBuff);
 		}
 		else if (win == 2){
 			 sel = true;
-			 selected = selectBuff[3];//selWin2(selectBuff);
+			 if (choiche < figureSet.size())
+				selected = choiche;//selWin2(selectBuff);
+			 else{
+				cpsel = true;
+				cp = choiche;
+			 }
 		}
 	 }
-	 else {
+	 else 
 		sel = false;
-	 }
 	 
 	 glutPostRedisplay();
 }
@@ -216,11 +233,8 @@ void loadRAWs(){
 	 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	 glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	 // glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-	 // glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 	 
 	 gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, 256, 256, GL_RGB, GL_UNSIGNED_BYTE, texture);
-	 //*texture = NULL;
   }
 }
 
@@ -437,20 +451,33 @@ void mouseWin2(int button, int state, int x, int y) {
 void mouseMotion(int x, int y) {
   Point *p = new Point(x, H2-y);
 
+  if (cpsel){
+	 Figure *f = figureSet[selected];
+	 if (Line *l = dynamic_cast<Line*>(f)){
+		l->setPoint(cp - figureSet.size(), p);
+	 }
+	 if (Triangle *t = dynamic_cast<Triangle*>(f)){
+		t->setPoint(cp - figureSet.size(), p);
+	 }
+	 if (Quad *q = dynamic_cast<Quad*>(f)){
+		q->setPoint(cp - figureSet.size(), p);
+	 }
+  }
+ 
   switch(figType) {
   case LINE: {
 	 Line *l = (Line*) figureSet.back();
-	 l->setSecond(p);
-	 break;
-  }
-  case QUAD: {
-	 Quad *q = (Quad*) figureSet.back();
-	 q->setThird(p);
+	 l->setPoint(2, p);
 	 break;
   }
   case TRIANGLE: {
 	 Triangle *t = (Triangle*) figureSet.back();
-	 t->setSecond(p);
+	 t->setTriangle(p);
+	 break;
+  }
+  case QUAD: {
+	 Quad *q = (Quad*) figureSet.back();
+	 q->setQuad(p);
 	 break;
   }
   }

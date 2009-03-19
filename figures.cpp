@@ -38,14 +38,17 @@ Line::Line(Point *p1, Point *p2, GLfloat r, GLfloat g, GLfloat b) {
   setColor(r, g, b);
 }
 
-void Line::setFirst(Point *p) {
-  delete pt1;
-  pt1 = p;
-}
-
-void Line::setSecond(Point *p) {
-  delete pt2;
-  pt2 = p;
+void Line::setPoint(int n, Point *p) {
+  switch (n) {
+  case 1:
+	 delete pt1;
+	 pt1 = p;
+	 break;
+  case 2:
+	 delete pt2;
+	 pt2 = p;
+	 break;
+  }
 }
 
 void Line::draw(int n) {
@@ -55,7 +58,6 @@ void Line::draw(int n) {
   int *pts2 = pt2->getCoords();
   //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
-  glPassThrough((GLfloat)n);
   glBegin(GL_LINES);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
@@ -79,24 +81,31 @@ Triangle::Triangle(Point *p1, Point *p2, GLfloat r, GLfloat g, GLfloat b) {
   setColor(r, g, b);
 }
 
-void Triangle::setFirst(Point *p) {
-  delete pt1;
-  pt1 = p;
+void Triangle::setPoint(int n, Point *p) {
+  switch (n) {
+  case 1:
+	 delete pt1;
+	 pt1 = p;
+	 break;
+  case 2:
+	 delete pt2;
+	 pt2 = p;
+	 break;
+  case 3:
+	 delete pt3;
+	 pt3 = p;
+	 break;
+  }
 }
-
-void Triangle::setSecond(Point *p) {
+	 
+void Triangle::setTriangle(Point *p) {
   delete pt2;
   pt2 = p;
   int *pts1 = pt1->getCoords();
   int *pts2 = pt2->getCoords();
   Point *p3 = new Point(pts1[0], pts2[1] + (pts2[1]-pts1[1]));
   //  Point *p3 = new Point((pts1[0]+pts2[0])/2, pts1[1]+(pts2[0]-pts1[0]));
-  setThird(p3);
-}
-
-void Triangle::setThird(Point *p) {
-  delete pt3;
-  pt3 = p;
+  setPoint(3, p3);
 }
 
 void Triangle::draw(int n) {
@@ -107,7 +116,6 @@ void Triangle::draw(int n) {
   int *pts3 = pt3->getCoords();
   //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
-  glPassThrough((GLfloat)n);
   glBegin(GL_TRIANGLES);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
@@ -136,31 +144,38 @@ Quad::Quad(Point *p1, Point *p3, GLfloat r, GLfloat g, GLfloat b) {
   setColor(r, g, b);
 }
 
-void Quad::setFirst(Point *p) {
-  delete pt1;
-  pt1 = p;
+void Quad::setPoint(int n, Point *p) {
+  switch (n) {
+  case 1:
+	 delete pt1;
+	 pt1 = p;
+	 break;
+  case 2:
+	 delete pt2;
+	 pt2 = p;
+	 break;
+  case 3:
+	 delete pt3;
+	 pt3 = p;
+	 break;
+  case 4:
+	 delete pt4;
+	 pt4 = p;
+	 break;
+  }
 }
 
-void Quad::setSecond(Point *p) {
-  delete pt2;
-  pt2 = p;
-}
-
-void Quad::setThird(Point *p) {
+void Quad::setQuad(Point *p) {
   delete pt3;
   pt3 = p;
   int *pts1 = pt1->getCoords();
   int *pts3 = pt3->getCoords();
   Point *p2 = new Point(pts3[0], pts1[1]);
   Point *p4 = new Point(pts1[0], pts3[1]);
-  setSecond(p2);
-  setFourth(p4);
+  setPoint(2, p2);
+  setPoint(4, p4);
 }
 
-void Quad::setFourth(Point *p) {
-  delete pt4;
-  pt4 = p;
-}
 
 void Quad::draw(int n) {
   GLfloat *c = getColor();
@@ -171,7 +186,6 @@ void Quad::draw(int n) {
   int *pts4 = pt4->getCoords();
   //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
-  glPassThrough((GLfloat)n);
   glBegin(GL_QUADS);
   glVertex2f(pts1[0], pts1[1]);
   glVertex2f(pts2[0], pts2[1]);
