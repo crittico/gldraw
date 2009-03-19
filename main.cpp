@@ -39,9 +39,24 @@ const char *texFiles[TEX_COUNT] =
 {"images/pointer.raw", "images/line.raw", "images/triangle.raw", "images/quad.raw"};
 
 // define color names
-#define RED 6
-#define GREEN 7
-#define BLUE 8
+#define WHITE 6
+#define GREY 7
+#define DGREY 8
+#define BLACK 9
+#define RED 10
+#define DRED 11
+#define PURPLE 12
+#define DPURPLE 13
+#define BLUE 14
+#define DBLUE 15
+#define CYAN 16
+#define DCYAN 17
+#define GREEN 18
+#define DGREEN 19
+#define YELLOW 20
+#define DYELLOW 21
+#define ORANGE 22
+#define DORANGE 23
 GLfloat *clr = new GLfloat[3]; // the current color
 
 vector<Figure*> figureSet; // the vector that contains all the figures created
@@ -289,19 +304,92 @@ void displayWin1() {
   glPushMatrix();
   glTranslatef(0, -4*(hb), 0);
   
-  // red
+  // first line of colors
+  glColor3f(1, 1, 1);
+  glLoadName(WHITE);
+  drawQuad(0, H1, W1/3.0, H1-hb);
+  glColor3f(0.7, 0.7, 0.7);
+  glLoadName(GREY);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  glColor3f(0.3, 0.3, 0.3);
+  glLoadName(DGREY);
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -5*(hb), 0);
+
+  // second line of colors
+  glColor3f(0, 0, 0);
+  glLoadName(BLACK);
+  drawQuad(0, H1, W1/3.0, H1-hb);
   glColor3f(1, 0, 0);
   glLoadName(RED);
-  drawQuad(0, H1, W1/3.0, H1-hb);
-  // green
-  glColor3f(0, 1, 0);
-  glLoadName(GREEN);
   drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
-  // blue
+  glColor3f(0.5, 0, 0);
+  glLoadName(DRED);
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -6*(hb), 0);
+
+  // third line of colors
+  glColor3f(1, 0, 1);
+  glLoadName(PURPLE);
+  drawQuad(0, H1, W1/3.0, H1-hb);
+  glColor3f(0.5, 0, 0.5);
+  glLoadName(DPURPLE);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
   glColor3f(0, 0, 1);
   glLoadName(BLUE);
   drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
-  
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -7*(hb), 0);
+
+  // fourth line of colors
+  glColor3f(0, 0, 0.5);
+  glLoadName(DBLUE);
+  drawQuad(0, H1, W1/3.0, H1-hb);
+  glColor3f(0, 1, 1);
+  glLoadName(CYAN);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  glColor3f(0, 0.5, 0.5);
+  glLoadName(DCYAN);
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -8*(hb), 0);
+
+  // fifth line of colors
+  glColor3f(0, 1, 0);
+  glLoadName(GREEN);
+  drawQuad(0, H1, W1/3.0, H1-hb);
+  glColor3f(0, 0.5, 0);
+  glLoadName(DGREEN);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  glColor3f(1, 1, 0);
+  glLoadName(YELLOW);
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+
+  glPopMatrix();
+  glPushMatrix();
+  glTranslatef(0, -9*(hb), 0);
+
+  // sixth line of colors
+  glColor3f(0.5, 0.5, 0);
+  glLoadName(DYELLOW);
+  drawQuad(0, H1, W1/3.0, H1-hb);
+  glColor3f(1, 0.5, 0);
+  glLoadName(ORANGE);
+  drawQuad(W1/3.0, H1, W1*(2.0/3.0), H1-hb);
+  glColor3f(0.5, 0.25, 0);
+  glLoadName(DORANGE);
+  drawQuad(W1*(2.0/3.0), H1, W1, H1-hb);
+
   glPopMatrix();
   
   // borders of the buttons
@@ -348,27 +436,107 @@ void selWin1(GLuint *pselectBuff){
 	 break;
   case LINE:
 	 figType = LINE;
+	 sel = false;
 	 break;
   case QUAD:
 	 figType = QUAD;
+	 sel = false;
 	 break;
   case TRIANGLE:
 	 figType = TRIANGLE;
+	 sel = false;
+	 break;
+	 //colors
+  case WHITE:
+	 setColor(1, 1, 1);
+	 if (sel)
+		figureSet[selected]->setColor(1, 1, 1);
+	 break;
+  case GREY:
+	 setColor(0.7, 0.7, 0.7);
+	 if (sel)
+		figureSet[selected]->setColor(0.7, 0.7, 0.7);
+	 break;
+  case DGREY:
+	 setColor(0.3, 0.3, 0.3);
+	 if (sel)
+		figureSet[selected]->setColor(0.3, 0.3, 0.3);
+	 break;
+  case BLACK:
+	 setColor(0, 0, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0, 0, 0);
 	 break;
   case RED:
 	 setColor(1, 0, 0);
 	 if (sel)
 		figureSet[selected]->setColor(1, 0, 0);
 	 break;
-  case GREEN:
-	 setColor(0, 1, 0);
+  case DRED:
+	 setColor(0.5, 0, 0);
 	 if (sel)
-		figureSet[selected]->setColor(0, 1, 0);
+		figureSet[selected]->setColor(0.5, 0, 0);
+	 break;
+  case PURPLE:
+	 setColor(1, 0, 1);
+	 if (sel)
+		figureSet[selected]->setColor(1, 0, 1);
+	 break;
+  case DPURPLE:
+	 setColor(0.5, 0, 0.5);
+	 if (sel)
+		figureSet[selected]->setColor(0.5, 0, 0.5);
 	 break;
   case BLUE:
 	 setColor(0, 0, 1);
 	 if (sel)
 		figureSet[selected]->setColor(0, 0, 1);
+	 break;
+  case DBLUE:
+	 setColor(0, 0, 0.5);
+	 if (sel)
+		figureSet[selected]->setColor(0, 0, 0.5);
+	 break;
+  case CYAN:
+	 setColor(0, 1, 1);
+	 if (sel)
+		figureSet[selected]->setColor(0, 1, 1);
+	 break;
+  case DCYAN:
+	 setColor(0, 0.5, 0.5);
+	 if (sel)
+		figureSet[selected]->setColor(0, 0.5, 0.5);
+	 break;
+  case GREEN:
+	 setColor(0, 1, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0, 1, 0);
+	 break;
+  case DGREEN:
+	 setColor(0, 0.5, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0, 0.5, 0);
+	 break;
+  case YELLOW:
+	 setColor(1, 1, 0);
+	 if (sel)
+		figureSet[selected]->setColor(1, 1, 0);
+	 break;
+  case DYELLOW:
+	 setColor(0.5, 0.5, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0.5, 0.5, 0);
+	 break;
+  case ORANGE:
+	 setColor(1, 0.5, 0);
+	 if (sel)
+		figureSet[selected]->setColor(1, 0.5, 0);
+	 break;
+  case DORANGE:
+	 setColor(0.5, 0.25, 0);
+	 if (sel)
+		figureSet[selected]->setColor(0.5, 0.25, 0);
+	 break;
   }
   glutPostWindowRedisplay(window2);
 }
@@ -498,6 +666,8 @@ int main(int argc, char* argv[]){
   glutDisplayFunc(displayWin2);
   glutMouseFunc(mouseWin2);
   glutMotionFunc(mouseMotion);
+
+  clr[0] = clr[1] = clr[2] = 0; //initial color to black
 
   glutMainLoop();  
 }
