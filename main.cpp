@@ -1,3 +1,9 @@
+/*
+ * Name: glDraw
+ * Author: Geremia Mirco
+ * License: BSD
+ */
+
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
@@ -8,32 +14,31 @@
 using namespace std;
 
 void setColor(GLfloat, GLfloat, GLfloat);
+void drawQuad(int, int, int, int);
+void drawBorder(int, int, int, int);
+void drawSel();
+void selection(int, int, int);
+void loadRAWs();
 void reshapeWin1(int, int);
 void displayWin1();
+void selWin1(GLuint*);
 void mouseWin1(int, int, int, int);
 void reshapeWin2(int, int);
 void displayWin2();
 void mouseWin2(int, int, int, int);
 void mouseMotion(int, int);
-void drawQuad(int, int, int, int);
-void drawBorder(int, int, int, int);
-void selection(int, int, int);
-void selWin1(GLuint*);
-void drawSel();
-void loadRAWs();
 
 int window1 = 0, window2 = 0;
-int X = 0, Y = 0;
-int W1 = 100, H1 = 500; // width and length of the Strumenti window
-int W2 = 500, H2 = 500; // width and length of the Foglio window
+int W1 = 100, H1 = 500; // width and heigth of the Strumenti window
+int W2 = 500, H2 = 500; // width and heigth of the Foglio window
 
-// define figure names (also for texture)
+// define figure names (for textures too)
 #define POINTER 0
 #define LINE 1
 #define TRIANGLE 2
 #define QUAD 3
 #define TEX_COUNT 4  // the number of textures
-int figType = POINTER; // the figure type selected: 1 line; 2 quad
+int figType = POINTER; // the figure type selected: 1 line, 2 quad, etc
 GLuint textures[TEX_COUNT];
 const char *texFiles[TEX_COUNT] = 
 {"images/pointer.raw", "images/line.raw", "images/triangle.raw", "images/quad.raw"};
@@ -57,15 +62,17 @@ const char *texFiles[TEX_COUNT] =
 #define DYELLOW 21
 #define ORANGE 22
 #define DORANGE 23
-GLfloat *clr = new GLfloat[3]; // the current color
 
+GLfloat *clr = new GLfloat[3]; // the current color
 vector<Figure*> figureSet; // the vector that contains all the figures created
 bool sel = false;
 int selected = 0; // current selected figure
+/* the numeration of the control points starts from the first number 
+available to put a new 'int name' on the selection buffer stack */
 int cpsel = false;
 int cp = figureSet.size() + 1; // current selected control point
 
-// set the current color
+// set the selected color 
 void setColor(GLfloat r, GLfloat g, GLfloat b) {
   clr[0] = r;
   clr[1] = g;
@@ -101,41 +108,34 @@ void drawBorder(int x, int y, int w, int z) {
   glEnd();
 }
 
-// draw controls point around the figure
+// draw controls point around a figure
 void drawSel() {
   glColor3f(0, 0, 0);
   int size = figureSet.size();
   Figure *f = figureSet[selected];
+
+  /* getPoint() is a virtual method: every figure has at least 
+	  two points (is at least a line) */
   Point *p1 = f->getPoint(1);
   Point *p2 = f->getPoint(2);
   int *pt1 = p1->getCoords();
   int *pt2 = p2->getCoords();
+  glLoadName(size+1);
+  drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
+  glLoadName(size+2);
+  drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
 
-  if (dynamic_cast<Line*>(f)) {
-	 glLoadName(size+1);
-	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
-	 glLoadName(size+2);
-	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
-  }
-  else if (Triangle *t = dynamic_cast<Triangle*>(f)) {
+  if (Triangle *t = dynamic_cast<Triangle*>(f)) { // triangle: one more point
 	 Point *p3 = t->getPoint(3);
 	 int *pt3 = p3->getCoords();
-	 glLoadName(size+1);
-	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
-	 glLoadName(size+2);
-	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
 	 glLoadName(size+3);
 	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
   }
-  else if (Quad *q = dynamic_cast<Quad*>(f)) {
+  else if (Quad *q = dynamic_cast<Quad*>(f)) { // quad: two more point
 	 Point *p3 = q->getPoint(3);
 	 Point *p4 = q->getPoint(4);
 	 int *pt3 = p3->getCoords();
 	 int *pt4 = p4->getCoords();
-	 glLoadName(size+1);
-	 drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
-	 glLoadName(size+2);
-	 drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
 	 glLoadName(size+3);
 	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
 	 glLoadName(size+4);
@@ -144,17 +144,16 @@ void drawSel() {
 }
 
 
+/* Used to obtain the figure selected in the first
+or second window, depending on 'win' parameter */
 #define BUFFER_LENGTH 64
 void selection(int x, int y, int win) {
 	 // Space for selection buffer
 	 static GLuint selectBuff[BUFFER_LENGTH];
-	 	// Hit counter and viewport storage
 	 GLint hits, viewport[4];
 	 
-	 // Setup selection buffer
+	 // Setup selection buffer and get the view port
 	 glSelectBuffer(BUFFER_LENGTH, selectBuff);
-	 
-	 // Get the viewport
 	 glGetIntegerv(GL_VIEWPORT, viewport);
 	 
 	 // Switch to projection and save the matrix
@@ -163,16 +162,11 @@ void selection(int x, int y, int win) {
 	 
 	 // Change render mode
 	 glRenderMode(GL_SELECT);
-
-	 // Establish new clipping volume to be unit cube around
-	 // mouse cursor point (xPos, yPos) and extending two pixels
-	 // in the vertical and horizontal direction
 	 glLoadIdentity();
+	 // clipping volume
 	 gluPickMatrix(x, viewport[3] - y + viewport[1], 2,2, viewport);
-	 //gluPickMatrix(x, y, 2, 2, viewport);
 	 
-	 // Apply perspective matrix 
-	 //gluPerspective(60.0f, W1/H1, 1.0, 425.0);
+
 	 if (win == 1)
 		glOrtho(0, W1, 0, H1, 1, -1);
 	 else if (win == 2)
@@ -195,12 +189,12 @@ void selection(int x, int y, int win) {
 	 // Go back to modelview for normal rendering
 	 glMatrixMode(GL_MODELVIEW);
 	 
-	 // If a single hit occurred, display the info.
-	 if(hits > 0){
+	 if(hits > 0){ //something's been selected
 		unsigned int choiche;
 
+		// fi there's more than one figure (or control point) selected, take the top one
 		if (hits > 1)
-		  choiche = selectBuff[(hits*4)-1];
+		  choiche = selectBuff[(hits*4)-1]; 
 		else
 		  choiche = selectBuff[3];
 
@@ -210,15 +204,15 @@ void selection(int x, int y, int win) {
 		}
 		else if (win == 2){
 			 sel = true;
-			 if (choiche < figureSet.size())
+			 if (choiche < figureSet.size()) // figure selected
 				selected = choiche;
-			 else{
+			 else{ // it's a control point
 				cpsel = true;
 				cp = choiche;
 			 }
 		}
 	 }
-	 else 
+	 else // a click with no hits -> deselection
 		sel = false;
 	 
 	 glutPostRedisplay();
@@ -226,6 +220,7 @@ void selection(int x, int y, int win) {
 
 GLubyte *texture[256 * 256 * 3];
 void loadRAWs(){
+  // generate all the textures
   glGenTextures(TEX_COUNT, textures);
   for (int i = 0; i < TEX_COUNT; i++) {
 	 FILE *fHan = fopen(texFiles[i], "rb");
@@ -242,7 +237,9 @@ void loadRAWs(){
   }
 }
 
-//Strumenti window
+/*
+ * Strumenti window and relative functions
+ */
 void reshapeWin1(int neww, int newh) {
   W1 = neww;
   H1 = newh;
@@ -256,11 +253,11 @@ void reshapeWin1(int neww, int newh) {
 }
 
 void displayWin1() {
-  int hb = H1/10; // height of the buttons
-  glClearColor(1, 1, 1, 1);
+  int hb = H1/10; // height of the 'buttons'
+  glClearColor(1, 1, 1, 1); // white background
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_TEXTURE_2D);
-  loadRAWs();
+  loadRAWs(); // load all the textures
 
   // initialize the stack for the selection
   glInitNames();
@@ -268,6 +265,7 @@ void displayWin1() {
 
   glColor3f(1, 1, 1);
    
+  // apply a texture to explain each figures button
   // pointer
   glLoadName(POINTER);
   glBindTexture(GL_TEXTURE_2D, textures[POINTER]);
@@ -279,7 +277,7 @@ void displayWin1() {
   drawQuad(W1/2.0, H1, W1, H1-hb);
 
   glPushMatrix();
-  glTranslatef(0, -hb, 0);
+  glTranslatef(0, -hb, 0); // translated to maintain H1-hb
 
   // triangle
   glLoadName(TRIANGLE);
@@ -296,7 +294,8 @@ void displayWin1() {
   glTranslatef(0, -3*(hb), 0);
   
   glDeleteTextures(TEX_COUNT, textures);
-  // current color
+
+  // selected color
   glColor3f(clr[0], clr[1], clr[2]);
   drawQuad(0, H1, W1, H1-hb);
 
@@ -304,6 +303,7 @@ void displayWin1() {
   glPushMatrix();
   glTranslatef(0, -4*(hb), 0);
   
+  // colors button
   // first line of colors
   glColor3f(1, 1, 1);
   glLoadName(WHITE);
@@ -426,11 +426,12 @@ void displayWin1() {
   glutSwapBuffers();
 }
 
-// process selection
+// process selection in 'Strumenti' window
 void selWin1(GLuint *pselectBuff){
-  int id = pselectBuff[3];
+  int id = pselectBuff[3]; 
 
   switch(id){
+	 // if a figure instrument is selected, than deselect the figure in 'Foglio' window 
   case POINTER:
 	 figType = POINTER;
 	 break;
@@ -446,7 +447,7 @@ void selWin1(GLuint *pselectBuff){
 	 figType = TRIANGLE;
 	 sel = false;
 	 break;
-	 //colors
+	 // colors: if there's a figure selected, change its color
   case WHITE:
 	 setColor(1, 1, 1);
 	 if (sel)
@@ -538,6 +539,7 @@ void selWin1(GLuint *pselectBuff){
 		figureSet[selected]->setColor(0.5, 0.25, 0);
 	 break;
   }
+  // redisplay 'Foglio' window to change figures color or deselect figures
   glutPostWindowRedisplay(window2);
 }
 
@@ -548,7 +550,9 @@ void mouseWin1(int button, int state, int x, int y) {
 }
 
 
-//Foglio window
+/* 
+ * Foglio window and relative functions
+ */
 void reshapeWin2(int neww, int newh) {
   W2 = neww;
   H2 = newh;
@@ -567,10 +571,11 @@ void displayWin2() {
   glInitNames();
   glPushName(0);
 
+  // iterates through the figures collection 
   for (int i = 0; i < (int)figureSet.size(); i++){
-	 figureSet[i]->draw(i);
+	 figureSet[i]->draw(i); // call virtual method draw()
   }
-  if (sel){
+  if (sel){ // if a figure is selected draw the control points
 	 drawSel();
   }
 
@@ -580,9 +585,9 @@ void displayWin2() {
 
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 if (figType == POINTER)
+	 if (figType == POINTER) // a figure's been selected 
 		selection(x, y, 2);
-	 else {
+	 else { // create a figure
 		Point *p1 = new Point(x, H2-y);
 		Point *p2 = new Point(x, H2-y);
 		Figure *f;
@@ -598,9 +603,10 @@ void mouseWin2(int button, int state, int x, int y) {
 		  f = new Triangle(p1, p2, clr[0], clr[1], clr[2]);
 		  break;
 		}
+		// add the figure to the collection 
 		figureSet.push_back(f);
 		sel = true;
-		selected = figureSet.size()-1;
+		selected = figureSet.size()-1; // select the figure created
 	 }
   }
 
@@ -614,7 +620,7 @@ void mouseWin2(int button, int state, int x, int y) {
 void mouseMotion(int x, int y) {
   Point *p = new Point(x, H2-y);
 
-  if (cpsel){
+  if (cpsel){ // the user is trying to move a control point
 	 Figure *f = figureSet[selected];
 	 if (Line *l = dynamic_cast<Line*>(f)){
 		l->setPoint(cp - figureSet.size(), p);
@@ -627,6 +633,7 @@ void mouseMotion(int x, int y) {
 	 }
   }
  
+  // show the figure while creating
   switch(figType) {
   case LINE: {
 	 Line *l = (Line*) figureSet.back();

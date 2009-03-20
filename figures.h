@@ -1,3 +1,9 @@
+/*
+ * Name: glDraw
+ * Author: Geremia Mirco
+ * License: BSD
+ */
+
 #ifndef FIGURES_H
 #define FIGURES_H
 
@@ -21,6 +27,7 @@ class Figure {  //abstract class
   virtual ~Figure() {};
   void setColor(GLfloat, GLfloat, GLfloat);
   GLfloat *getColor();
+  // virtual methods
   virtual void draw(int) = 0;
   virtual Point* getPoint(int) = 0;
   virtual void setPoint(int, Point*) = 0;
@@ -44,7 +51,7 @@ class Triangle : public Figure {
  public:
   Triangle(Point*, Point*, GLfloat, GLfloat, GLfloat);
   virtual ~Triangle() {};
-  void setTriangle(Point*);
+  void setTriangle(Point*); 
   virtual void setPoint(int, Point*);
   virtual void draw(int);
   virtual Point* getPoint(int);

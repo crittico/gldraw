@@ -1,3 +1,9 @@
+/*
+ * Name: glDraw
+ * Author: Geremia Mirco
+ * License: BSD
+ */
+
 #include <iostream>
 #include <GL/glut.h>
 #include "figures.h"
@@ -51,12 +57,12 @@ void Line::setPoint(int n, Point *p) {
   }
 }
 
+// draw the line giving the n name for the selection buffer
 void Line::draw(int n) {
   GLfloat *c = getColor();
   glColor3f(c[0], c[1], c[2]);
   int *pts1 = pt1->getCoords();
   int *pts2 = pt2->getCoords();
-  //  cout << c[0] << c[1] << c[2] << endl;
   glLoadName(n);
   glBegin(GL_LINES);
   glVertex2f(pts1[0], pts1[1]);
@@ -103,8 +109,10 @@ void Triangle::setTriangle(Point *p) {
   pt2 = p;
   int *pts1 = pt1->getCoords();
   int *pts2 = pt2->getCoords();
+  // the triangle is created with a vertical base
   Point *p3 = new Point(pts1[0], pts2[1] + (pts2[1]-pts1[1]));
-  //  Point *p3 = new Point((pts1[0]+pts2[0])/2, pts1[1]+(pts2[0]-pts1[0]));
+  /* the triangle is created with an horizontal base
+  Point *p3 = new Point((pts1[0]+pts2[0])/2, pts1[1]+(pts2[0]-pts1[0])); */
   setPoint(3, p3);
 }
 
@@ -164,6 +172,7 @@ void Quad::setPoint(int n, Point *p) {
   }
 }
 
+// used to draw the Quad proportionally while creating
 void Quad::setQuad(Point *p) {
   delete pt3;
   pt3 = p;
