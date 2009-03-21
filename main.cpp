@@ -38,7 +38,7 @@ int W2 = 500, H2 = 500; // width and heigth of the Foglio window
 #define TRIANGLE 2
 #define QUAD 3
 #define TEX_COUNT 4  // the number of textures
-int figType = POINTER; // the figure type selected: 1 line, 2 quad, etc
+int figType = POINTER; // the figure type selected: 0 pointer, 1 line, etc
 GLuint textures[TEX_COUNT];
 const char *texFiles[TEX_COUNT] = 
 {"images/pointer.raw", "images/line.raw", "images/triangle.raw", "images/quad.raw"};
@@ -95,16 +95,12 @@ void drawQuad(int x, int y, int w, int z) {
 
 // draw the borders of the selected button with the top-left and the bottom-right points
 void drawBorder(int x, int y, int w, int z) {
-  glColor3f(1, 0, 0.2);
-  glBegin(GL_LINES);
+  glColor3f(0.9, 0, 0);
+  glBegin(GL_LINE_LOOP);
   glVertex2f(x, y);
   glVertex2f(w, y);
-  glVertex2f(w, y);
-  glVertex2f(w, z);
   glVertex2f(w, z);
   glVertex2f(x, z);
-  glVertex2f(x, z);
-  glVertex2f(x, y);
   glEnd();
 }
 
@@ -116,26 +112,21 @@ void drawSel() {
 
   /* getPoint() is a virtual method: every figure has at least 
 	  two points (is at least a line) */
-  Point *p1 = f->getPoint(1);
-  Point *p2 = f->getPoint(2);
-  int *pt1 = p1->getCoords();
-  int *pt2 = p2->getCoords();
+  int *pt1 = f->getPoint(1)->getCoords();
+  int *pt2 = f->getPoint(2)->getCoords();
   glLoadName(size+1);
   drawQuad(pt1[0]-3, pt1[1]-3, pt1[0]+3, pt1[1]+3);
   glLoadName(size+2);
   drawQuad(pt2[0]-3, pt2[1]-3, pt2[0]+3, pt2[1]+3);
 
   if (Triangle *t = dynamic_cast<Triangle*>(f)) { // triangle: one more point
-	 Point *p3 = t->getPoint(3);
-	 int *pt3 = p3->getCoords();
+	 int *pt3 = t->getPoint(3)->getCoords();
 	 glLoadName(size+3);
 	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
   }
   else if (Quad *q = dynamic_cast<Quad*>(f)) { // quad: two more point
-	 Point *p3 = q->getPoint(3);
-	 Point *p4 = q->getPoint(4);
-	 int *pt3 = p3->getCoords();
-	 int *pt4 = p4->getCoords();
+	 int *pt3 = q->getPoint(3)->getCoords();
+	 int *pt4 = q->getPoint(4)->getCoords();
 	 glLoadName(size+3);
 	 drawQuad(pt3[0]-3, pt3[1]-3, pt3[0]+3, pt3[1]+3);
 	 glLoadName(size+4);
@@ -570,7 +561,7 @@ void displayWin2() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glInitNames();
   glPushName(0);
-
+ 
   // iterates through the figures collection 
   for (int i = 0; i < (int)figureSet.size(); i++){
 	 figureSet[i]->draw(i); // call virtual method draw()
@@ -582,11 +573,14 @@ void displayWin2() {
   glutSwapBuffers();
 }
 
-
+int ox = 0, oy = 0; // the coordinates where the mouse is pressed (used for mouseMotion)
 void mouseWin2(int button, int state, int x, int y) {
   if ((button == GLUT_LEFT) && (state == GLUT_DOWN)){
-	 if (figType == POINTER) // a figure's been selected 
+	 if (figType == POINTER) {// a figure's been selected 
+		ox = x; 
+		oy = y;
 		selection(x, y, 2);
+	 }
 	 else { // create a figure
 		Point *p1 = new Point(x, H2-y);
 		Point *p2 = new Point(x, H2-y);
@@ -620,17 +614,39 @@ void mouseWin2(int button, int state, int x, int y) {
 void mouseMotion(int x, int y) {
   Point *p = new Point(x, H2-y);
 
-  if (cpsel){ // the user is trying to move a control point
+  if ((figType == POINTER) && sel) {
 	 Figure *f = figureSet[selected];
-	 if (Line *l = dynamic_cast<Line*>(f)){
-		l->setPoint(cp - figureSet.size(), p);
+	 if (cpsel){ // the user is trying to move a control point (modify)
+		f->setPoint(cp - figureSet.size(), p);
 	 }
-	 if (Triangle *t = dynamic_cast<Triangle*>(f)){
-		t->setPoint(cp - figureSet.size(), p);
+	 else { // the user want to move the figure as a block (move)
+		// common points
+		int xoffset = x - ox;
+		int yoffset = oy - y; // openGl invert y coordinate
+		int *pt1 = f->getPoint(1)->getCoords();
+		int *pt2 = f->getPoint(2)->getCoords();
+		// move coordinates basing on offsets 
+		Point *p1 = new Point(pt1[0] + xoffset, pt1[1] + yoffset);
+		f->setPoint(1, p1);
+		Point *p2 = new Point(pt2[0] + xoffset, pt2[1] + yoffset);
+		f->setPoint(2, p2);
+		
+		if (Triangle *t = dynamic_cast<Triangle*>(f)) {
+		  int *pt3 = t->getPoint(3)->getCoords();
+		  Point *p3 = new Point(pt3[0] + xoffset, pt3[1] + yoffset);
+		  t->setPoint(3, p3);
+		}
+		else if (Quad *q = dynamic_cast<Quad*>(f)) {
+		  int *pt3 = q->getPoint(3)->getCoords();
+		  int *pt4 = q->getPoint(4)->getCoords();
+		  Point *p3 = new Point(pt3[0] + xoffset, pt3[1] + yoffset);
+		  q->setPoint(3, p3);
+		  Point *p4 = new Point(pt4[0] + xoffset, pt4[1] + yoffset);
+		  q->setPoint(4, p4);
+		}
 	 }
-	 if (Quad *q = dynamic_cast<Quad*>(f)){
-		q->setPoint(cp - figureSet.size(), p);
-	 }
+	 ox = x; // refresh coordinates
+	 oy = y;
   }
  
   // show the figure while creating
