@@ -12,3 +12,5 @@ Sono presenti due finestre:
 Appena sopra la tavolozza e' visualizzato il colore corrente.
 - Foglio: in questa finestra si possono disegnare le figure.
 Lo strumento puntatore consente di spostare le figure disegnate o di modificarle tramite i punti di controllo.
+
+Per compilare il programma e' sufficiente lanciare il comando 'make', e per eseguirlo './glDraw'
