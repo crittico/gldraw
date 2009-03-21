@@ -1,1 +1,14 @@
-An openGl drawing program
+/* 
+ * glDraw
+ * Author: Mirco Geremia
+ * License: BSD
+ */
+ 
+ 
+glDraw e' un software che permette di disegnare delle semplici figure.
+
+Sono presenti due finestre: 
+- Strumenti: consente di scegliere la figura da disegnare e il relativo colore. 
+Appena sopra la tavolozza e' visualizzato il colore corrente.
+- Foglio: in questa finestra si possono disegnare le figure.
+Lo strumento puntatore consente di spostare le figure disegnate o di modificarle tramite i punti di controllo.
